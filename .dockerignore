@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.github
+.husky
+docker-compose.yml
+Dockerfile
+.dockerignore
+README.md
+cypress
+pnpm-lock.yaml
