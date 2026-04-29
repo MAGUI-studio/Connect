@@ -14,7 +14,9 @@
     "cypress:run": "cypress run",
     "prepare": "husky && pnpm run partytown",
     "partytown": "partytown copylib public/~partytown",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "audit:links": "linkinator http://localhost:3000 --recurse --silent",
+    "audit:visual": "cypress run --spec cypress/e2e/visual-audit.cy.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -60,6 +62,7 @@
     "eslint-config-next": "16.2.4",
     "husky": "^9.1.7",
     "jsdom": "^29.1.0",
+    "linkinator": "^7.6.1",
     "lint-staged": "^16.4.0",
     "next-sitemap": "^4.2.3",
     "prettier": "^3.8.3",
