@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Partytown } from "@builder.io/partytown/react";
 import { WebVitals } from "@/components/WebVitals";
+import { ScrollDepthTracker } from "@/hooks/useScrollDepth";
+import { BRAND_CONFIG } from "@/constants/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,16 +18,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Landing Page Template",
-    template: "%s | Brand",
+    default: BRAND_CONFIG.seo.defaultTitle,
+    template: BRAND_CONFIG.seo.titleTemplate,
   },
-  description:
-    "A modern, production-ready landing page template built with Next.js, Shadcn UI, and Framer Motion.",
+  description: BRAND_CONFIG.description,
   openGraph: {
     type: "website",
-    locale: "pt_BR",
-    url: "https://www.example.com/",
-    siteName: "Brand",
+    locale: BRAND_CONFIG.seo.locale,
+    url: BRAND_CONFIG.url,
+    siteName: BRAND_CONFIG.name,
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: BRAND_CONFIG.seo.twitterHandle,
   },
 };
 
@@ -47,6 +52,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col">
         <WebVitals />
+        <ScrollDepthTracker />
         {children}
       </body>
     </html>
