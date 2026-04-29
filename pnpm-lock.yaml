@@ -84,6 +84,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.10(@types/node@20.19.39)(jiti@2.6.1)(yaml@2.8.3))
+      axe-core:
+        specifier: ^4.11.4
+        version: 4.11.4
       commitlint:
         specifier: ^20.5.2
         version: 20.5.2(@types/node@20.19.39)(conventional-commits-parser@6.4.0)(typescript@5.9.3)
@@ -93,6 +96,9 @@ importers:
       cypress:
         specifier: ^15.14.1
         version: 15.14.1
+      cypress-axe:
+        specifier: ^1.7.0
+        version: 1.7.0(axe-core@4.11.4)(cypress@15.14.1)
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
@@ -2151,6 +2157,13 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  cypress-axe@1.7.0:
+    resolution: {integrity: sha512-zzJpvAAjauEB3GZl0KYXb8i3w6MztWAt2WM3czYTFyNVC30alDmqCm9E7GwZ4bgkldZJlmHakaVEyu73R5St4w==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      axe-core: ^3 || ^4
+      cypress: ^10 || ^11 || ^12 || ^13 || ^14 || ^15
 
   cypress@15.14.1:
     resolution: {integrity: sha512-AkuiHNSnmm0a+h/horcvbjmY6dWpCe1Ebp1R0LjMP5I6pjMaNA50Mw1YP/d07pLHJ/sV8FZoGecUWFCJ/Nifpw==}
@@ -7519,6 +7532,11 @@ snapshots:
   cssesc@3.0.0: {}
 
   csstype@3.2.3: {}
+
+  cypress-axe@1.7.0(axe-core@4.11.4)(cypress@15.14.1):
+    dependencies:
+      axe-core: 4.11.4
+      cypress: 15.14.1
 
   cypress@15.14.1:
     dependencies:

@@ -16,7 +16,8 @@
     "partytown": "partytown copylib public/~partytown",
     "changeset": "changeset",
     "audit:links": "linkinator http://localhost:3000 --recurse --silent",
-    "audit:visual": "cypress run --spec cypress/e2e/visual-audit.cy.ts"
+    "audit:visual": "cypress run --spec cypress/e2e/visual-audit.cy.ts",
+    "audit:a11y": "cypress run --spec cypress/e2e/accessibility.cy.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -55,9 +56,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
+    "axe-core": "^4.11.4",
     "commitlint": "^20.5.2",
     "cross-env": "^10.1.0",
     "cypress": "^15.14.1",
+    "cypress-axe": "^1.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "husky": "^9.1.7",

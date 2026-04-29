@@ -15,6 +15,7 @@ You are working on a high-performance, enterprise-grade Next.js template. Follow
 - **Git Hygiene:** Husky and Commitlint are active. Use conventional commits (e.g., `feat:`, `fix:`, `chore:`).
 - **Pre-commit:** `lint-staged` runs Prettier and ESLint on every commit. Do not bypass this.
 - **CI/CD:** Every PR triggers Vitest, Cypress, Build, and Lighthouse CI (scores must be > 90%).
+- **A11y:** The project follows WCAG 2.1 AA standards. Always run `pnpm run audit:a11y` when creating new layouts.
 
 ## 2. Performance Standards
 
