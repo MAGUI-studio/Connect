@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Partytown } from "@builder.io/partytown/react";
 import { WebVitals } from "@/components/WebVitals";
 
 const geistSans = Geist({
@@ -38,6 +39,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <Partytown
+          debug={process.env.NODE_ENV === "development"}
+          forward={["dataLayer.push"]}
+        />
+      </head>
       <body className="flex min-h-full flex-col">
         <WebVitals />
         {children}

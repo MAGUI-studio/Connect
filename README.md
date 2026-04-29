@@ -18,6 +18,8 @@ A production-ready template for building modern, responsive, and accessible land
 - ✨ **Smooth Animations:** Integrated with Framer Motion for elegant page transitions and scroll effects.
 - 📱 **Fully Responsive:** Carefully crafted mobile experience.
 - 🌙 **Dark Mode Ready:** Easily extensible for theming.
+- ⚡ **Partytown Integrated:** Offload third-party scripts to Web Workers for maximum performance.
+- 🦋 **Changesets:** Automated versioning and changelog management.
 - 🧩 **Modular Architecture:** Well-organized components split into Layouts, Sections, and UI elements.
 
 ## Directory Structure
