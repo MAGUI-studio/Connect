@@ -4,6 +4,9 @@ module.exports = {
       startServerCommand: "pnpm start",
       url: ["http://localhost:3000"],
       numberOfRuns: 3,
+      settings: {
+        chromeFlags: "--no-sandbox --headless --disable-gpu",
+      },
     },
     assert: {
       assertions: {
