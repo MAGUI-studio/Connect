@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   Instagram,
   Linkedin,
@@ -44,7 +44,7 @@ type Profile = {
   }>;
 };
 
-const getIcon = (kind: string, iconName: string | null) => {
+const getIcon = (kind: string, _iconName: string | null) => {
   switch (kind.toUpperCase()) {
     case "INSTAGRAM":
       return <Instagram size={20} />;
@@ -66,6 +66,8 @@ const getIcon = (kind: string, iconName: string | null) => {
       return <Briefcase size={20} />;
     case "WHATSAPP":
       return <MessageCircle size={20} />;
+    case "GLOBE":
+      return <Globe size={20} />;
     default:
       return <ExternalLink size={18} />;
   }
@@ -76,7 +78,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const fgColor = profile.themeForeground || "#ffffff";
   const accentColor = profile.themeAccent || "#3b82f6";
 
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -87,12 +89,15 @@ export function ProfileView({ profile }: { profile: Profile }) {
     },
   };
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, y: 15 },
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
     },
   };
 
@@ -127,7 +132,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
             )}
           </div>
 
-          <h1 className="mb-1 text-2xl font-semibold tracking-tight">
+          <h1 className="mb-1 text-2xl font-semibold tracking-tight text-white">
             {profile.displayName}
           </h1>
 
@@ -154,7 +159,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
           )}
 
           {profile.headline && (
-            <p className="mb-4 max-w-[90%] text-base leading-relaxed opacity-70">
+            <p className="mb-4 max-w-[90%] text-base leading-relaxed font-medium opacity-70">
               {profile.headline}
             </p>
           )}
@@ -213,7 +218,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 {getIcon(link.kind, link.icon)}
               </div>
 
-              <span className="flex-1 text-sm font-medium tracking-tight">
+              <span className="flex-1 text-sm font-medium tracking-tight text-white/90">
                 {link.label}
               </span>
 
