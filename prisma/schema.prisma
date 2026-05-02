@@ -346,6 +346,9 @@ model MaguiConnectLink {
   label               String
   url                 String
   icon                String?
+  kind                String              @default("LINK")
+  isFeatured          Boolean             @default(false)
+  openInNewTab        Boolean             @default(true)
   sortOrder           Int                 @default(0)
   isActive            Boolean             @default(true)
   clickCount          Int                 @default(0)
@@ -363,7 +366,17 @@ model MaguiConnectProfile {
   slug                   String?                  @unique
   displayName            String
   headline               String?
+  bio                    String?
   avatarUrl              String?
+  ogImageUrl             String?
+  professionalCategory   String?
+  location               String?
+  companyName            String?
+  whatsapp               String?
+  publicEmail            String?
+  publicPhone            String?
+  primaryCtaLabel        String?
+  primaryCtaUrl          String?
   domain                 String?                  @unique
   themeAccent            String?
   themeBackground        String?                  @default("#0a0a0a")
