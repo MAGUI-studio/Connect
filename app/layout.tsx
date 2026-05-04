@@ -46,7 +46,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${jetbrainsMono.variable} h-full font-sans antialiased`}
       suppressHydrationWarning
     >
-      <body className="relative mx-auto flex min-h-full max-w-440 flex-col overflow-x-hidden font-sans shadow-2xl ring-1 ring-white/5">
+      <body className="relative mx-auto flex min-h-full max-w-440 flex-col overflow-x-hidden font-sans">
         <WebVitals />
         <ScrollDepthTracker />
         <ThemeProvider>{children}</ThemeProvider>

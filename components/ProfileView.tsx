@@ -1,19 +1,45 @@
 "use client";
 
+import { useMemo } from "react";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
-import { ExternalLink, MapPin, Building2, Share2, Info } from "lucide-react";
+import { MapPin, ArrowRight, ExternalLink } from "lucide-react";
 import { ThemeToggle } from "./common/themeToggle";
 
+type MaguiConnectLink = {
+  id: string;
+  label: string;
+  url: string;
+  kind: string;
+  icon: string | null;
+  isFeatured: boolean;
+  isActive: boolean;
+  openInNewTab: boolean;
+  startsAt: Date | string | null;
+  expiresAt: Date | string | null;
+  sectionId: string | null;
+};
+
+type MaguiConnectSection = {
+  id: string;
+  title: string;
+  isCollapsible: boolean;
+  isActive: boolean;
+  MaguiConnectLink: MaguiConnectLink[];
+};
+
 type Profile = {
+  id: string;
   displayName: string;
   headline: string | null;
   bio: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   professionalCategory: string | null;
   location: string | null;
   companyName: string | null;
   whatsapp: string | null;
+  whatsappMessage: string | null;
   publicEmail: string | null;
   publicPhone: string | null;
   primaryCtaLabel: string | null;
@@ -21,22 +47,15 @@ type Profile = {
   themeAccent: string | null;
   themeBackground: string | null;
   themeForeground: string | null;
-  MaguiConnectLink: Array<{
-    id: string;
-    label: string;
-    url: string;
-    kind: string;
-    icon: string | null;
-    isFeatured: boolean;
-    openInNewTab: boolean;
-  }>;
+  slug: string | null;
+  MaguiConnectLink: MaguiConnectLink[];
+  MaguiConnectSection: MaguiConnectSection[];
 };
 
 const getIconPath = (kind: string, url: string = "") => {
   const normalizedKind = kind.toUpperCase();
   const lowerUrl = url.toLowerCase();
 
-  // Special handling for Email provider
   if (normalizedKind === "EMAIL" || lowerUrl.startsWith("mailto:")) {
     if (lowerUrl.includes("gmail.com")) return "/icons/Gmail.svg";
     if (
@@ -84,335 +103,327 @@ const getIconPath = (kind: string, url: string = "") => {
   return iconName ? `/icons/${iconName}.svg` : "/icons/Link.svg";
 };
 
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const item: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.23, 1, 0.32, 1],
+    },
+  },
+};
+
 export function ProfileView({ profile }: { profile: Profile }) {
-  const accentColor = profile.themeAccent || "#3b82f6";
+  const accentColor = profile.themeAccent || "var(--primary)";
+  const fontStyle = "var(--font-montserrat), ui-sans-serif, system-ui";
 
-  const container: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.2,
-      },
-    },
+  const now = new Date();
+
+  const isLinkActive = (link: MaguiConnectLink) => {
+    if (!link.isActive) return false;
+    const start = link.startsAt ? new Date(link.startsAt) : null;
+    const end = link.expiresAt ? new Date(link.expiresAt) : null;
+    if (start && now < start) return false;
+    if (end && now > end) return false;
+    return true;
   };
 
-  const item: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
-      },
-    },
-  };
+  const topLevelLinks = useMemo(() => {
+    return (profile.MaguiConnectLink || []).filter(
+      (l) => !l.sectionId && isLinkActive(l)
+    );
+  }, [profile.MaguiConnectLink, now, isLinkActive]);
+
+  const whatsappUrl = profile.whatsapp
+    ? `https://wa.me/${profile.whatsapp.replace(/\D/g, "")}${profile.whatsappMessage ? `?text=${encodeURIComponent(profile.whatsappMessage)}` : ""}`
+    : null;
 
   return (
     <div
-      className="selection:bg-opacity-20 bg-background text-foreground relative flex min-h-screen w-full justify-center overflow-x-hidden font-sans antialiased"
-      style={
-        {
-          selectionColor: accentColor,
-        } as React.CSSProperties
-      }
+      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden p-4 md:p-8 lg:p-12"
+      style={{ fontFamily: fontStyle } as React.CSSProperties}
     >
-      {/* Theme Toggle Positioned at Top Right */}
-      <div className="absolute top-6 right-6 z-50">
+      <div className="fixed top-6 right-6 z-50">
         <ThemeToggle />
       </div>
 
-      {/* Dynamic Background - More subtle and theme-aware */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-50 dark:opacity-20">
-        <div
-          className="absolute -top-[10%] -left-[10%] h-[50%] w-[50%] rounded-full blur-[120px]"
-          style={{ backgroundColor: accentColor }}
-        />
-        <div
-          className="absolute top-[40%] -right-[10%] h-[40%] w-[40%] rounded-full blur-[100px]"
-          style={{ backgroundColor: accentColor }}
-        />
-      </div>
-      <main className="relative z-10 flex w-full max-w-xl flex-col items-center px-6 py-16">
-        {/* Profile Header */}
+      <main className="mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-10 flex w-full flex-col items-center text-center"
-        >
-          {/* Avatar */}
-          <div className="group relative mb-8">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full opacity-30 blur-2xl"
-              style={{ backgroundColor: accentColor }}
-            />
-            {profile.avatarUrl ? (
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="border-border/50 relative h-32 w-32 overflow-hidden rounded-full border-4 shadow-2xl"
-              >
-                <Image
-                  src={profile.avatarUrl}
-                  alt={profile.displayName}
-                  fill
-                  className="object-cover"
-                />
-              </motion.div>
-            ) : (
-              <div className="bg-muted border-border/50 relative flex h-32 w-32 items-center justify-center rounded-full border-4 text-5xl font-bold">
-                {profile.displayName.charAt(0)}
-              </div>
-            )}
-
-            {/* Online Status or Badge */}
-            <div className="border-background absolute right-3 bottom-1 h-6 w-6 rounded-full border-4 bg-green-500 shadow-lg" />
-          </div>
-
-          <h1 className="text-foreground mb-2 text-4xl font-extrabold tracking-tight">
-            {profile.displayName}
-          </h1>
-
-          <div className="mb-6 flex flex-col items-center gap-1">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {profile.professionalCategory && (
-                <span className="bg-muted/50 border-border/50 text-foreground/80 rounded-full border px-3 py-1 text-sm font-semibold">
-                  {profile.professionalCategory}
-                </span>
-              )}
-              {profile.companyName && (
-                <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
-                  <Building2 size={14} /> {profile.companyName}
-                </span>
-              )}
-            </div>
-
-            {profile.location && (
-              <span className="text-muted-foreground/60 mt-1 flex items-center gap-1 text-xs font-medium">
-                <MapPin size={12} /> {profile.location}
-              </span>
-            )}
-          </div>
-
-          {profile.headline && (
-            <p className="text-foreground/90 mb-4 max-w-sm text-lg leading-snug font-medium">
-              {profile.headline}
-            </p>
-          )}
-
-          {profile.bio && (
-            <div className="group relative max-w-md">
-              <p className="text-muted-foreground mb-2 line-clamp-3 text-sm leading-relaxed italic transition-all duration-300 group-hover:line-clamp-none">
-                {profile.bio}
-              </p>
-              <div className="text-muted-foreground/20 flex justify-center transition-opacity group-hover:opacity-0">
-                <Info size={12} />
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Primary CTA */}
-        {profile.primaryCtaUrl && profile.primaryCtaLabel && (
-          <motion.a
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.02, translateY: -2 }}
-            whileTap={{ scale: 0.98 }}
-            href={profile.primaryCtaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative mb-12 flex w-full items-center justify-between overflow-hidden rounded-2xl p-5 shadow-xl transition-all"
-            style={{ backgroundColor: accentColor }}
-          >
-            <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-            <span className="relative z-10 pl-2 text-lg font-bold text-white">
-              {profile.primaryCtaLabel}
-            </span>
-            <div className="relative z-10 rounded-xl bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-white/30">
-              <Share2 size={20} className="text-white" />
-            </div>
-          </motion.a>
-        )}
-
-        {/* Links Navigation */}
-        <motion.nav
+          className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8"
           variants={container}
           initial="hidden"
           animate="show"
-          className="flex w-full flex-col gap-4"
         >
-          {profile.MaguiConnectLink.map((link) => (
-            <motion.a
-              key={link.id}
-              variants={item}
-              whileHover={{ scale: 1.01, x: 4 }}
-              whileTap={{ scale: 0.99 }}
-              href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
-              target={link.openInNewTab ? "_blank" : "_self"}
-              rel="noopener noreferrer"
-              className={`group relative flex items-center gap-4 overflow-hidden rounded-2xl border p-4 backdrop-blur-xl transition-all duration-300 ${
-                link.isFeatured ? "ring-1" : ""
-              }`}
-              style={{
-                backgroundColor: "var(--card)",
-                borderColor: link.isFeatured
-                  ? `${accentColor}50`
-                  : "var(--border)",
-                boxShadow: link.isFeatured
-                  ? `0 10px 30px -10px ${accentColor}30`
-                  : "none",
-              }}
-            >
-              {/* Highlight background on hover */}
-              <div
-                className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                style={{
-                  background: `linear-gradient(90deg, ${accentColor}10, transparent)`,
-                }}
-              />
-
-              <div className="flex h-12 w-12 items-center justify-center transition-all duration-300">
-                <Image
-                  src={getIconPath(link.kind, link.url)}
-                  alt={link.label}
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-              </div>
-
-              <div className="flex flex-1 flex-col">
-                <span className="text-foreground/90 group-hover:text-foreground text-base font-bold transition-colors">
-                  {link.label}
-                </span>
-                <span className="text-muted-foreground/60 group-hover:text-muted-foreground max-w-[200px] truncate text-[10px] transition-opacity">
-                  {link.url.replace(/^https?:\/\/(www\.)?/, "")}
-                </span>
-              </div>
-
-              <div className="mr-2 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
-                <ExternalLink size={16} className="text-muted-foreground" />
-              </div>
-
-              {link.isFeatured && (
-                <div className="absolute top-0 right-0 p-3">
-                  <div className="relative flex h-2 w-2">
-                    <span
-                      className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-                      style={{ backgroundColor: accentColor }}
-                    ></span>
-                    <span
-                      className="relative inline-flex h-2 w-2 rounded-full"
-                      style={{ backgroundColor: accentColor }}
-                    ></span>
+          {/* Left Column: Profile Info */}
+          <motion.div className="lg:col-span-4" variants={item}>
+            <div className="bg-card/40 sticky top-8 flex flex-col items-center rounded-4xl p-8 text-center backdrop-blur-xl">
+              <div className="relative mb-8">
+                {profile.avatarUrl ? (
+                  <div className="relative h-40 w-40 overflow-hidden rounded-full shadow-2xl md:h-48 md:w-48">
+                    <Image
+                      src={profile.avatarUrl}
+                      alt={profile.displayName}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
                   </div>
+                ) : (
+                  <div className="bg-muted flex h-40 w-40 items-center justify-center rounded-full text-5xl font-bold md:h-48 md:w-48">
+                    {profile.displayName.charAt(0)}
+                  </div>
+                )}
+                <div className="absolute right-4 bottom-4 h-6 w-6 rounded-full bg-emerald-500 shadow-lg" />
+              </div>
+
+              <h1 className="text-3xl font-black tracking-tight md:text-4xl">
+                {profile.displayName}
+              </h1>
+
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
+                {profile.professionalCategory && (
+                  <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                    {profile.professionalCategory}
+                  </span>
+                )}
+                {profile.companyName && (
+                  <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                    {profile.companyName}
+                  </span>
+                )}
+              </div>
+
+              {profile.location && (
+                <div className="text-muted-foreground mt-4 flex items-center gap-1.5 text-sm font-medium">
+                  <MapPin size={16} /> {profile.location}
                 </div>
               )}
-            </motion.a>
-          ))}
-        </motion.nav>
 
-        {/* Contact Quick Links */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="mt-20 flex w-full flex-col items-center gap-10 pb-16"
-        >
-          <div className="flex items-center gap-4">
-            {profile.publicEmail && (
-              <motion.a
-                whileHover={{ scale: 1.1, rotate: -5 }}
-                href={`mailto:${profile.publicEmail}`}
-                className="flex h-12 w-12 items-center justify-center transition-all"
-                title="Email"
-              >
-                <Image
-                  src={getIconPath("EMAIL", profile.publicEmail)}
-                  alt="Email"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
-              </motion.a>
-            )}
-            {profile.publicPhone && (
-              <motion.a
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                href={`tel:${profile.publicPhone}`}
-                className="flex h-12 w-12 items-center justify-center transition-all"
-                title="Call"
-              >
-                <Image
-                  src={getIconPath("PHONE", profile.publicPhone)}
-                  alt="Phone"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
-              </motion.a>
-            )}
-          </div>
+              {profile.headline && (
+                <p className="mt-6 text-lg leading-snug font-semibold">
+                  {profile.headline}
+                </p>
+              )}
 
-          <footer className="flex w-full flex-col items-center gap-8">
-            <div className="via-border h-[1px] w-full max-w-[100px] bg-gradient-to-r from-transparent to-transparent" />
+              {profile.bio && (
+                <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+                  {profile.bio}
+                </p>
+              )}
 
-            <motion.a
-              whileHover={{ opacity: 1, scale: 1.02 }}
-              href="https://magui.studio"
-              target="_blank"
-              className="group flex flex-col items-center gap-3 opacity-30 transition-all hover:opacity-100"
-            >
-              <span className="text-foreground/80 text-[10px] font-bold tracking-[0.3em]">
-                POWERED BY
-              </span>
-              <div className="bg-card border-border group-hover:border-border/80 rounded-xl border px-4 py-2 transition-all">
-                <span className="text-foreground text-xs font-black tracking-widest">
-                  MAGUI.STUDIO
-                </span>
+              {/* Quick Actions */}
+              <div className="mt-8 flex w-full flex-col gap-3">
+                {profile.primaryCtaUrl && profile.primaryCtaLabel && (
+                  <motion.a
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    href={profile.primaryCtaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold shadow-lg transition-all"
+                    style={{ backgroundColor: accentColor, color: "white" }}
+                  >
+                    {profile.primaryCtaLabel}
+                    <ExternalLink size={18} />
+                  </motion.a>
+                )}
+
+                <div className="flex items-center justify-center gap-6 py-4">
+                  {whatsappUrl && (
+                    <QuickAction
+                      iconPath="/icons/Whatsapp.svg"
+                      href={whatsappUrl}
+                      label="WhatsApp"
+                    />
+                  )}
+                  {profile.publicEmail && (
+                    <QuickAction
+                      iconPath={getIconPath("EMAIL", profile.publicEmail)}
+                      href={`mailto:${profile.publicEmail}`}
+                      label="Email"
+                    />
+                  )}
+                  {profile.publicPhone && (
+                    <QuickAction
+                      iconPath="/icons/Link.svg"
+                      href={`tel:${profile.publicPhone}`}
+                      label="Phone"
+                    />
+                  )}
+                </div>
               </div>
-            </motion.a>
-          </footer>
+            </div>
+          </motion.div>
+
+          {/* Right Column: Links & Sections */}
+          <motion.div className="space-y-8 lg:col-span-8" variants={item}>
+            {/* Banner moved to the top of the right column on Desktop */}
+            <div className="bg-card/40 relative h-32 w-full overflow-hidden rounded-4xl backdrop-blur-xl md:h-48">
+              <Image
+                src={profile.bannerUrl || "/images/placeholder.svg"}
+                alt="Banner"
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            {/* Top Level Links */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {topLevelLinks.map((link) => (
+                <LinkCard key={link.id} link={link} accentColor={accentColor} />
+              ))}
+            </div>
+
+            {/* Sections */}
+            {(profile.MaguiConnectSection || [])
+              .filter((s) => s.isActive)
+              .map((section) => {
+                const sectionLinks = (section.MaguiConnectLink || []).filter(
+                  isLinkActive
+                );
+                if (sectionLinks.length === 0) return null;
+
+                return (
+                  <div key={section.id} className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-xl font-black tracking-[0.2em] uppercase opacity-30">
+                        {section.title}
+                      </h2>
+                      <div className="bg-foreground/5 h-px flex-1" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {sectionLinks.map((link) => (
+                        <LinkCard
+                          key={link.id}
+                          link={link}
+                          accentColor={accentColor}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+            {/* Signature */}
+            <footer className="pt-16 pb-12">
+              <a
+                href="https://magui.studio"
+                target="_blank"
+                className="group flex flex-col items-center gap-1 opacity-20 transition-all hover:opacity-100"
+              >
+                <span className="text-muted-foreground group-hover:text-foreground text-[9px] font-bold tracking-[0.6em] uppercase transition-colors">
+                  Powered by
+                </span>
+                <div className="flex items-baseline">
+                  <span className="text-xl font-black tracking-tighter">
+                    MAGUI
+                  </span>
+                  <span className="text-xl font-medium tracking-tighter opacity-80">
+                    .studio
+                  </span>
+                </div>
+              </a>
+            </footer>
+          </motion.div>
         </motion.div>
       </main>
-
-      {/* WhatsApp Floating Widget */}
-      {profile.whatsapp && (
-        <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 flex w-full max-w-440 -translate-x-1/2 justify-end px-6">
-          <motion.a
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: 1.5,
-              type: "spring",
-              stiffness: 260,
-              damping: 20,
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            href={`https://wa.me/${profile.whatsapp.replace(/\D/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pointer-events-auto"
-            title="Fale conosco no WhatsApp"
-          >
-            <Image
-              src="/icons/Whatsapp.svg"
-              alt="WhatsApp"
-              width={56}
-              height={56}
-              className="drop-shadow-xl"
-            />
-          </motion.a>
-        </div>
-      )}
     </div>
+  );
+}
+
+function QuickAction({
+  iconPath,
+  href,
+  label,
+}: {
+  iconPath: string;
+  href: string;
+  label: string;
+}) {
+  return (
+    <motion.a
+      whileHover={{ y: -4, opacity: 0.6 }}
+      whileTap={{ scale: 0.95 }}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col items-center justify-center gap-1 transition-all"
+      title={label}
+    >
+      <Image
+        src={iconPath}
+        alt={label}
+        width={28}
+        height={28}
+        className="object-contain"
+      />
+      <span className="text-[9px] font-bold tracking-tighter uppercase opacity-40">
+        {label}
+      </span>
+    </motion.a>
+  );
+}
+
+function LinkCard({
+  link,
+  accentColor,
+}: {
+  link: MaguiConnectLink;
+  accentColor: string;
+}) {
+  return (
+    <motion.a
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
+      target={link.openInNewTab ? "_blank" : "_self"}
+      rel="noopener noreferrer"
+      className="bg-card/40 group hover:bg-card relative flex items-center gap-4 rounded-3xl p-4 backdrop-blur-md transition-all hover:shadow-2xl hover:shadow-black/[0.02]"
+    >
+      <div className="relative h-14 w-14 shrink-0 overflow-hidden">
+        <Image
+          src={getIconPath(link.kind, link.url)}
+          alt={link.label}
+          fill
+          className="object-contain transition-transform duration-500 group-hover:scale-110"
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <span className="text-lg leading-tight font-bold tracking-tight">
+          {link.label}
+        </span>
+        <span className="text-muted-foreground/60 truncate text-xs font-medium">
+          {link.url.replace(/^https?:\/\/(www\.)?/, "")}
+        </span>
+      </div>
+
+      <div className="mr-2 flex h-8 w-8 items-center justify-center opacity-0 transition-all group-hover:opacity-100">
+        <ArrowRight
+          size={16}
+          className="text-muted-foreground group-hover:text-foreground transition-all group-hover:translate-x-0.5"
+        />
+      </div>
+
+      {link.isFeatured && (
+        <div
+          className="absolute -top-1 -right-1 h-3 w-3 rounded-full"
+          style={{ backgroundColor: accentColor }}
+        />
+      )}
+    </motion.a>
   );
 }

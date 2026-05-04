@@ -1,23 +1,33 @@
 "use client";
 
 import * as React from "react";
-
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 
-function ThemeProvider({
-  children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+// Workaround for next-themes + React 19 / Next.js 15+ script injection warning
+// next-themes is currently unmaintained and triggers this dev-only error
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  const orig = console.error;
+  console.error = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("Encountered a script tag")
+    )
+      return;
+    orig.apply(console, args);
+  };
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      {...props}
+      enableColorScheme={false}
     >
-      <ThemeHotkey />
       {children}
+      <ThemeHotkey />
     </NextThemesProvider>
   );
 }

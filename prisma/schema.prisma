@@ -341,26 +341,46 @@ model LeadNote {
 }
 
 model MaguiConnectLink {
-  id                  String              @id
+  id                  String               @id @default(cuid())
   profileId           String
+  sectionId           String?
   label               String
   url                 String
   icon                String?
-  kind                String              @default("LINK")
-  isFeatured          Boolean             @default(false)
-  openInNewTab        Boolean             @default(true)
+  kind                String               @default("LINK")
+  isFeatured          Boolean              @default(false)
+  openInNewTab        Boolean              @default(true)
+  sortOrder           Int                  @default(0)
+  isActive            Boolean              @default(true)
+  clickCount          Int                  @default(0)
+  startsAt            DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  MaguiConnectProfile MaguiConnectProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  MaguiConnectSection MaguiConnectSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@index([profileId, sortOrder])
+  @@index([sectionId])
+}
+
+model MaguiConnectSection {
+  id                  String              @id @default(cuid())
+  profileId           String
+  profile             MaguiConnectProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title               String
   sortOrder           Int                 @default(0)
   isActive            Boolean             @default(true)
-  clickCount          Int                 @default(0)
+  isCollapsible       Boolean             @default(false)
   createdAt           DateTime            @default(now())
-  updatedAt           DateTime
-  MaguiConnectProfile MaguiConnectProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  updatedAt           DateTime            @updatedAt
+  MaguiConnectLink    MaguiConnectLink[]
 
   @@index([profileId, sortOrder])
 }
 
 model MaguiConnectProfile {
-  id                     String                   @id
+  id                     String                   @id @default(cuid())
   userId                 String                   @unique
   status                 MaguiConnectStatus       @default(DRAFT)
   slug                   String?                  @unique
@@ -368,11 +388,13 @@ model MaguiConnectProfile {
   headline               String?
   bio                    String?
   avatarUrl              String?
+  bannerUrl              String?
   ogImageUrl             String?
   professionalCategory   String?
   location               String?
   companyName            String?
   whatsapp               String?
+  whatsappMessage        String?
   publicEmail            String?
   publicPhone            String?
   primaryCtaLabel        String?
@@ -386,8 +408,9 @@ model MaguiConnectProfile {
   publishedAt            DateTime?
   lastSyncedAt           DateTime?
   createdAt              DateTime                 @default(now())
-  updatedAt              DateTime
+  updatedAt              DateTime                 @updatedAt
   MaguiConnectLink       MaguiConnectLink[]
+  MaguiConnectSection    MaguiConnectSection[]
   User                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   MaguiConnectPublishLog MaguiConnectPublishLog[]
 
@@ -396,7 +419,7 @@ model MaguiConnectProfile {
 }
 
 model MaguiConnectPublishLog {
-  id                  String              @id
+  id                  String              @id @default(cuid())
   profileId           String
   event               String
   status              String
