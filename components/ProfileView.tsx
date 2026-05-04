@@ -1,27 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
-import {
-  Instagram,
-  Linkedin,
-  Github,
-  Youtube,
-  Twitter,
-  Mail,
-  Phone,
-  ShoppingBag,
-  Briefcase,
-  Globe,
-  MessageCircle,
-  ExternalLink,
-  MapPin,
-  Building2,
-  Facebook,
-  Music2,
-  Share2,
-  ArrowRight,
-  Info,
-} from "lucide-react";
+import { ExternalLink, MapPin, Building2, Share2, Info } from "lucide-react";
 import { ThemeToggle } from "./common/themeToggle";
 
 type Profile = {
@@ -51,38 +32,56 @@ type Profile = {
   }>;
 };
 
-const getIcon = (kind: string) => {
-  const size = 20;
-  switch (kind.toUpperCase()) {
-    case "INSTAGRAM":
-      return <Instagram size={size} />;
-    case "LINKEDIN":
-      return <Linkedin size={size} />;
-    case "GITHUB":
-      return <Github size={size} />;
-    case "YOUTUBE":
-      return <Youtube size={size} />;
-    case "TWITTER":
-      return <Twitter size={size} />;
-    case "FACEBOOK":
-      return <Facebook size={size} />;
-    case "TIKTOK":
-      return <Music2 size={size} />;
-    case "EMAIL":
-      return <Mail size={size} />;
-    case "PHONE":
-      return <Phone size={size} />;
-    case "SHOP":
-      return <ShoppingBag size={size} />;
-    case "PORTFOLIO":
-      return <Briefcase size={size} />;
-    case "WHATSAPP":
-      return <MessageCircle size={size} />;
-    case "GLOBE":
-      return <Globe size={size} />;
-    default:
-      return <ArrowRight size={size} />;
+const getIconPath = (kind: string, url: string = "") => {
+  const normalizedKind = kind.toUpperCase();
+  const lowerUrl = url.toLowerCase();
+
+  // Special handling for Email provider
+  if (normalizedKind === "EMAIL" || lowerUrl.startsWith("mailto:")) {
+    if (lowerUrl.includes("gmail.com")) return "/icons/Gmail.svg";
+    if (
+      lowerUrl.includes("outlook.com") ||
+      lowerUrl.includes("hotmail.com") ||
+      lowerUrl.includes("live.com") ||
+      lowerUrl.includes("msn.com")
+    )
+      return "/icons/Outlook.svg";
+    return "/icons/Email.svg";
   }
+
+  const iconMap: Record<string, string> = {
+    INSTAGRAM: "Instagram",
+    LINKEDIN: "LinkedIn",
+    YOUTUBE: "Youtube",
+    TWITTER: "X",
+    X: "X",
+    TIKTOK: "Tiktok",
+    WHATSAPP: "Whatsapp",
+    SPOTIFY: "Spotify",
+    APPLEMUSIC: "AppleMusic",
+    TELEGRAM: "Telegram",
+    DISCORD: "Discord",
+    THREADS: "Threads",
+    TWITCH: "Twitch",
+    BEHANCE: "Behance",
+    ARTSTATION: "Artstation",
+    DRIBBBLE: "Dribbble",
+    MEDIUM: "Medium",
+    PINTEREST: "Pinterest",
+    VIMEO: "Vimeo",
+    MAPS: "Maps",
+    DRIVE: "Drive",
+    AMAZON: "Amazon",
+    ALIEXPRESS: "AliExpress",
+    MERCADOLIVRE: "MercadoLivre",
+    SHOPEE: "Shopee",
+    HOTMART: "Hotmart",
+    KIWIFY: "Kiwify",
+    EDUZZ: "Eduzz",
+  };
+
+  const iconName = iconMap[normalizedKind];
+  return iconName ? `/icons/${iconName}.svg` : "/icons/Link.svg";
 };
 
 export function ProfileView({ profile }: { profile: Profile }) {
@@ -126,7 +125,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
       </div>
 
       {/* Dynamic Background - More subtle and theme-aware */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden opacity-50 dark:opacity-20">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-50 dark:opacity-20">
         <div
           className="absolute -top-[10%] -left-[10%] h-[50%] w-[50%] rounded-full blur-[120px]"
           style={{ backgroundColor: accentColor }}
@@ -136,7 +135,6 @@ export function ProfileView({ profile }: { profile: Profile }) {
           style={{ backgroundColor: accentColor }}
         />
       </div>
-
       <main className="relative z-10 flex w-full max-w-xl flex-col items-center px-6 py-16">
         {/* Profile Header */}
         <motion.div
@@ -155,12 +153,17 @@ export function ProfileView({ profile }: { profile: Profile }) {
               style={{ backgroundColor: accentColor }}
             />
             {profile.avatarUrl ? (
-              <motion.img
+              <motion.div
                 whileHover={{ scale: 1.05 }}
-                src={profile.avatarUrl}
-                alt={profile.displayName}
-                className="border-border/50 relative h-32 w-32 rounded-full border-4 object-cover shadow-2xl"
-              />
+                className="border-border/50 relative h-32 w-32 overflow-hidden rounded-full border-4 shadow-2xl"
+              >
+                <Image
+                  src={profile.avatarUrl}
+                  alt={profile.displayName}
+                  fill
+                  className="object-cover"
+                />
+              </motion.div>
             ) : (
               <div className="bg-muted border-border/50 relative flex h-32 w-32 items-center justify-center rounded-full border-4 text-5xl font-bold">
                 {profile.displayName.charAt(0)}
@@ -275,8 +278,14 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 }}
               />
 
-              <div className="bg-muted border-border group-hover:text-foreground group-hover:border-border/80 flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-300">
-                {getIcon(link.kind)}
+              <div className="flex h-12 w-12 items-center justify-center transition-all duration-300">
+                <Image
+                  src={getIconPath(link.kind, link.url)}
+                  alt={link.label}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
 
               <div className="flex flex-1 flex-col">
@@ -318,35 +327,36 @@ export function ProfileView({ profile }: { profile: Profile }) {
           className="mt-20 flex w-full flex-col items-center gap-10 pb-16"
         >
           <div className="flex items-center gap-4">
-            {profile.whatsapp && (
-              <motion.a
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                href={`https://wa.me/${profile.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted flex h-12 w-12 items-center justify-center rounded-2xl border transition-all"
-                title="WhatsApp"
-              >
-                <MessageCircle size={24} />
-              </motion.a>
-            )}
             {profile.publicEmail && (
               <motion.a
                 whileHover={{ scale: 1.1, rotate: -5 }}
                 href={`mailto:${profile.publicEmail}`}
-                className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted flex h-12 w-12 items-center justify-center rounded-2xl border transition-all"
+                className="flex h-12 w-12 items-center justify-center transition-all"
                 title="Email"
               >
-                <Mail size={24} />
+                <Image
+                  src={getIconPath("EMAIL", profile.publicEmail)}
+                  alt="Email"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
               </motion.a>
             )}
             {profile.publicPhone && (
               <motion.a
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 href={`tel:${profile.publicPhone}`}
-                className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted flex h-12 w-12 items-center justify-center rounded-2xl border transition-all"
+                className="flex h-12 w-12 items-center justify-center transition-all"
                 title="Call"
               >
-                <Phone size={24} />
+                <Image
+                  src={getIconPath("PHONE", profile.publicPhone)}
+                  alt="Phone"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
               </motion.a>
             )}
           </div>
@@ -372,6 +382,37 @@ export function ProfileView({ profile }: { profile: Profile }) {
           </footer>
         </motion.div>
       </main>
+
+      {/* WhatsApp Floating Widget */}
+      {profile.whatsapp && (
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 flex w-full max-w-440 -translate-x-1/2 justify-end px-6">
+          <motion.a
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              delay: 1.5,
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            href={`https://wa.me/${profile.whatsapp.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pointer-events-auto"
+            title="Fale conosco no WhatsApp"
+          >
+            <Image
+              src="/icons/Whatsapp.svg"
+              alt="WhatsApp"
+              width={56}
+              height={56}
+              className="drop-shadow-xl"
+            />
+          </motion.a>
+        </div>
+      )}
     </div>
   );
 }
