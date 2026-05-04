@@ -115,7 +115,7 @@ export default async function MaguiConnectPage(props: Props) {
           </div>
 
           <div className="relative z-10 w-full max-w-[480px]">
-            <div className="bg-card/40 rounded-4xl p-10 shadow-2xl backdrop-blur-2xl md:p-16">
+            <div className="p-10 md:p-16">
               <div className="mb-10 flex flex-col items-center text-center">
                 <div className="bg-foreground/5 mb-8 flex h-20 w-20 items-center justify-center rounded-3xl">
                   <span className="text-4xl">⚡</span>
@@ -165,7 +165,7 @@ export default async function MaguiConnectPage(props: Props) {
         </div>
 
         <div className="relative z-10 w-full max-w-[440px]">
-          <div className="bg-card/40 rounded-4xl p-10 text-center shadow-2xl backdrop-blur-2xl md:p-16">
+          <div className="p-10 text-center md:p-16">
             <div className="bg-foreground/5 mx-auto mb-10 flex h-20 w-20 items-center justify-center rounded-3xl">
               <span className="text-4xl">⏳</span>
             </div>

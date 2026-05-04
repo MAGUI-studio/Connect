@@ -160,19 +160,19 @@ export function ProfileView({ profile }: { profile: Profile }) {
         <ThemeToggle />
       </div>
 
-      <main className="mx-auto max-w-7xl">
+      <main className="w-full">
         <motion.div
-          className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8"
+          className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16"
           variants={container}
           initial="hidden"
           animate="show"
         >
           {/* Left Column: Profile Info */}
           <motion.div className="lg:col-span-4" variants={item}>
-            <div className="bg-card/40 sticky top-8 flex flex-col items-center rounded-4xl p-8 text-center backdrop-blur-xl">
+            <div className="sticky top-8 flex flex-col items-center p-8 text-center">
               <div className="relative mb-8">
                 {profile.avatarUrl ? (
-                  <div className="relative h-40 w-40 overflow-hidden rounded-full shadow-2xl md:h-48 md:w-48">
+                  <div className="relative h-44 w-44 overflow-hidden rounded-full shadow-2xl md:h-52 md:w-52">
                     <Image
                       src={profile.avatarUrl}
                       alt={profile.displayName}
@@ -182,58 +182,58 @@ export function ProfileView({ profile }: { profile: Profile }) {
                     />
                   </div>
                 ) : (
-                  <div className="bg-muted flex h-40 w-40 items-center justify-center rounded-full text-5xl font-bold md:h-48 md:w-48">
+                  <div className="bg-muted flex h-44 w-44 items-center justify-center rounded-full text-5xl font-bold md:h-52 md:w-52">
                     {profile.displayName.charAt(0)}
                   </div>
                 )}
-                <div className="absolute right-4 bottom-4 h-6 w-6 rounded-full bg-emerald-500 shadow-lg" />
+                <div className="ring-background absolute right-4 bottom-4 h-6 w-6 rounded-full bg-emerald-500 shadow-lg ring-4" />
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight md:text-4xl">
+              <h1 className="text-4xl font-black tracking-tighter md:text-5xl">
                 {profile.displayName}
               </h1>
 
-              <div className="mt-2 flex flex-wrap justify-center gap-2">
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {profile.professionalCategory && (
-                  <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                  <span className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase">
                     {profile.professionalCategory}
                   </span>
                 )}
                 {profile.companyName && (
-                  <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                  <span className="bg-muted text-muted-foreground rounded-full px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase">
                     {profile.companyName}
                   </span>
                 )}
               </div>
 
               {profile.location && (
-                <div className="text-muted-foreground mt-4 flex items-center gap-1.5 text-sm font-medium">
-                  <MapPin size={16} /> {profile.location}
+                <div className="text-muted-foreground mt-4 flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase opacity-60">
+                  <MapPin size={14} /> {profile.location}
                 </div>
               )}
 
               {profile.headline && (
-                <p className="mt-6 text-lg leading-snug font-semibold">
+                <p className="mt-8 text-xl leading-tight font-bold tracking-tight">
                   {profile.headline}
                 </p>
               )}
 
               {profile.bio && (
-                <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+                <p className="text-muted-foreground mt-4 text-sm leading-relaxed font-medium">
                   {profile.bio}
                 </p>
               )}
 
               {/* Quick Actions */}
-              <div className="mt-8 flex w-full flex-col gap-3">
+              <div className="mt-10 flex w-full flex-col gap-4">
                 {profile.primaryCtaUrl && profile.primaryCtaLabel && (
                   <motion.a
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     href={profile.primaryCtaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold shadow-lg transition-all"
+                    className="flex w-full items-center justify-center gap-2 rounded-full py-5 text-sm font-black tracking-[0.2em] uppercase shadow-xl transition-all"
                     style={{ backgroundColor: accentColor, color: "white" }}
                   >
                     {profile.primaryCtaLabel}
@@ -241,7 +241,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                   </motion.a>
                 )}
 
-                <div className="flex items-center justify-center gap-6 py-4">
+                <div className="flex items-center justify-center gap-12 py-6">
                   {whatsappUrl && (
                     <QuickAction
                       iconPath="/icons/Whatsapp.svg"
@@ -269,19 +269,23 @@ export function ProfileView({ profile }: { profile: Profile }) {
           </motion.div>
 
           {/* Right Column: Links & Sections */}
-          <motion.div className="space-y-8 lg:col-span-8" variants={item}>
-            {/* Banner moved to the top of the right column on Desktop */}
-            <div className="bg-card/40 relative h-32 w-full overflow-hidden rounded-4xl backdrop-blur-xl md:h-48">
+          <motion.div
+            className="space-y-12 lg:col-span-8 lg:pt-8"
+            variants={item}
+          >
+            {/* Banner */}
+            <div className="relative h-40 w-full overflow-hidden rounded-3xl md:h-64">
               <Image
                 src={profile.bannerUrl || "/images/placeholder.svg"}
                 alt="Banner"
                 fill
                 className="object-cover"
               />
+              <div className="from-background/40 absolute inset-0 bg-gradient-to-t to-transparent" />
             </div>
 
             {/* Top Level Links */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="divide-foreground/5 flex flex-col divide-y">
               {topLevelLinks.map((link) => (
                 <LinkCard key={link.id} link={link} accentColor={accentColor} />
               ))}
@@ -297,14 +301,14 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 if (sectionLinks.length === 0) return null;
 
                 return (
-                  <div key={section.id} className="space-y-6">
+                  <div key={section.id} className="space-y-6 pt-8">
                     <div className="flex items-center gap-4">
-                      <h2 className="text-xl font-black tracking-[0.2em] uppercase opacity-30">
+                      <h2 className="text-sm font-black tracking-[0.4em] uppercase opacity-20">
                         {section.title}
                       </h2>
                       <div className="bg-foreground/5 h-px flex-1" />
                     </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="divide-foreground/5 flex flex-col divide-y">
                       {sectionLinks.map((link) => (
                         <LinkCard
                           key={link.id}
@@ -318,20 +322,20 @@ export function ProfileView({ profile }: { profile: Profile }) {
               })}
 
             {/* Signature */}
-            <footer className="pt-16 pb-12">
+            <footer className="flex justify-center pt-12 pb-8">
               <a
                 href="https://magui.studio"
                 target="_blank"
-                className="group flex flex-col items-center gap-1 opacity-20 transition-all hover:opacity-100"
+                className="flex w-fit flex-col items-center gap-1 opacity-30 transition-none"
               >
-                <span className="text-muted-foreground group-hover:text-foreground text-[9px] font-bold tracking-[0.6em] uppercase transition-colors">
+                <span className="text-muted-foreground text-[8px] font-black tracking-[0.8em] uppercase">
                   Powered by
                 </span>
-                <div className="flex items-baseline">
-                  <span className="text-xl font-black tracking-tighter">
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-2xl font-black tracking-tighter">
                     MAGUI
                   </span>
-                  <span className="text-xl font-medium tracking-tighter opacity-80">
+                  <span className="text-2xl font-light tracking-tighter opacity-60">
                     .studio
                   </span>
                 </div>
@@ -355,22 +359,24 @@ function QuickAction({
 }) {
   return (
     <motion.a
-      whileHover={{ y: -4, opacity: 0.6 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ y: -6, scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col items-center justify-center gap-1 transition-all"
+      className="flex flex-col items-center justify-center gap-3 transition-all"
       title={label}
     >
-      <Image
-        src={iconPath}
-        alt={label}
-        width={28}
-        height={28}
-        className="object-contain"
-      />
-      <span className="text-[9px] font-bold tracking-tighter uppercase opacity-40">
+      <div className="relative flex h-14 w-14 items-center justify-center transition-colors">
+        <Image
+          src={iconPath}
+          alt={label}
+          width={42}
+          height={42}
+          className="object-contain"
+        />
+      </div>
+      <span className="text-[10px] font-black tracking-[0.2em] uppercase opacity-40">
         {label}
       </span>
     </motion.a>
@@ -386,14 +392,14 @@ function LinkCard({
 }) {
   return (
     <motion.a
-      whileHover={{ y: -4, scale: 1.01 }}
+      whileHover={{ x: 10 }}
       whileTap={{ scale: 0.99 }}
       href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
       target={link.openInNewTab ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className="bg-card/40 group hover:bg-card relative flex items-center gap-4 rounded-3xl p-4 backdrop-blur-md transition-all hover:shadow-2xl hover:shadow-black/[0.02]"
+      className="group relative flex items-center gap-6 py-8 transition-all"
     >
-      <div className="relative h-14 w-14 shrink-0 overflow-hidden">
+      <div className="relative h-14 w-14 shrink-0">
         <Image
           src={getIconPath(link.kind, link.url)}
           alt={link.label}
@@ -403,25 +409,28 @@ function LinkCard({
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <span className="text-lg leading-tight font-bold tracking-tight">
+        <span className="text-2xl leading-none font-black tracking-tighter md:text-3xl">
           {link.label}
         </span>
-        <span className="text-muted-foreground/60 truncate text-xs font-medium">
+        <span className="text-muted-foreground mt-1 truncate text-[10px] font-black tracking-[0.2em] uppercase opacity-40">
           {link.url.replace(/^https?:\/\/(www\.)?/, "")}
         </span>
       </div>
 
-      <div className="mr-2 flex h-8 w-8 items-center justify-center opacity-0 transition-all group-hover:opacity-100">
+      <div className="mr-4 flex h-10 w-10 items-center justify-center opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
         <ArrowRight
-          size={16}
-          className="text-muted-foreground group-hover:text-foreground transition-all group-hover:translate-x-0.5"
+          size={24}
+          className="text-muted-foreground group-hover:text-foreground"
         />
       </div>
 
       {link.isFeatured && (
         <div
-          className="absolute -top-1 -right-1 h-3 w-3 rounded-full"
-          style={{ backgroundColor: accentColor }}
+          className="absolute top-1/2 -left-6 h-10 w-1 -translate-y-1/2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.1)]"
+          style={{
+            backgroundColor: accentColor,
+            boxShadow: `0 0 25px ${accentColor}`,
+          }}
         />
       )}
     </motion.a>
