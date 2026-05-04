@@ -38,9 +38,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# partytown
-/public/~partytown
-
 # tasks
 todo
 /src/generated/prisma

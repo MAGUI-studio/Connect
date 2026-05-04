@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Montserrat, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Partytown } from "@builder.io/partytown/react";
 import { WebVitals } from "@/components/WebVitals";
 import { ScrollDepthTracker } from "@/hooks/useScrollDepth";
 import { BRAND_CONFIG } from "@/constants/config";
+import { ThemeProvider } from "@/lib/providers/themeProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -42,18 +43,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${jetbrainsMono.variable} h-full font-sans antialiased`}
+      suppressHydrationWarning
     >
-      <head>
-        <Partytown
-          debug={process.env.NODE_ENV === "development"}
-          forward={["dataLayer.push"]}
-        />
-      </head>
-      <body className="flex min-h-full flex-col">
+      <body className="relative mx-auto flex min-h-full max-w-440 flex-col overflow-x-hidden font-sans shadow-2xl ring-1 ring-white/5">
         <WebVitals />
         <ScrollDepthTracker />
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -19,7 +19,6 @@ You are working on a high-performance, enterprise-grade Next.js template. Follow
 
 ## 2. Performance Standards
 
-- **Partytown:** All third-party scripts (GA, Pixel) MUST use `type="text/partytown"`. Never add heavy scripts to the main thread.
 - **Bundle Size:** Be careful with imports. Use the `pnpm run analyze` command if you suspect a library is too heavy.
 - **Web Vitals:** Monitor metrics via the `WebVitals` component. Performance is a feature.
 
@@ -50,4 +49,3 @@ You are working on a high-performance, enterprise-grade Next.js template. Follow
 - `pnpm changeset`: Create a new versioning changeset (required for new features).
 - `pnpm test`: Run unit tests.
 - `pnpm cypress:run`: Run E2E tests.
-- `pnpm run partytown`: Sync Partytown library files to `public/`.
