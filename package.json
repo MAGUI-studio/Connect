@@ -68,6 +68,7 @@
     "cypress-axe": "^1.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "get-port-please": "^3.2.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.0",
     "linkinator": "^7.6.1",

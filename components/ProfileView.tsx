@@ -1,17 +1,26 @@
 "use client";
 
-import { useMemo } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  type ReactNode,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
-import { motion, type Variants } from "framer-motion";
-import { MapPin, ArrowRight, ExternalLink } from "lucide-react";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { ArrowRight, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import { ScrollArea } from "../src/components/ui/scroll-area";
 import { ThemeToggle } from "./common/themeToggle";
 
 type MaguiConnectLink = {
   id: string;
   label: string;
   url: string;
-  kind: string;
-  icon: string | null;
+  customShortDescription: string | null;
+  kind: string | null;
+  startsAt: string | Date | null;
+  expiresAt: string | Date | null;
   isFeatured: boolean;
   isActive: boolean;
   openInNewTab: boolean;
@@ -21,6 +30,7 @@ type MaguiConnectLink = {
 type MaguiConnectSection = {
   id: string;
   title: string;
+  description: string | null;
   isCollapsible: boolean;
   isActive: boolean;
   MaguiConnectLink: MaguiConnectLink[];
@@ -29,6 +39,9 @@ type MaguiConnectSection = {
 type Profile = {
   id: string;
   displayName: string;
+  heroKicker: string | null;
+  heroHeadline: string | null;
+  heroDescription: string | null;
   headline: string | null;
   bio: string | null;
   avatarUrl: string | null;
@@ -42,9 +55,9 @@ type Profile = {
   publicPhone: string | null;
   primaryCtaLabel: string | null;
   primaryCtaUrl: string | null;
+  secondaryCtaLabel: string | null;
+  secondaryCtaUrl: string | null;
   themeAccent: string | null;
-  themeBackground: string | null;
-  themeForeground: string | null;
   slug: string | null;
   MaguiConnectLink: MaguiConnectLink[];
   MaguiConnectSection: MaguiConnectSection[];
@@ -55,14 +68,22 @@ const getIconPath = (kind: string, url: string = "") => {
   const lowerUrl = url.toLowerCase();
 
   if (normalizedKind === "EMAIL" || lowerUrl.startsWith("mailto:")) {
-    if (lowerUrl.includes("gmail.com")) return "/icons/Gmail.svg";
+    if (lowerUrl.includes("@gmail.com") || lowerUrl.includes("gmail.com")) {
+      return "/icons/Gmail.svg";
+    }
     if (
+      lowerUrl.includes("@outlook.com") ||
+      lowerUrl.includes("@hotmail.com") ||
+      lowerUrl.includes("@live.com") ||
+      lowerUrl.includes("@msn.com") ||
       lowerUrl.includes("outlook.com") ||
       lowerUrl.includes("hotmail.com") ||
       lowerUrl.includes("live.com") ||
       lowerUrl.includes("msn.com")
-    )
+    ) {
       return "/icons/Outlook.svg";
+    }
+
     return "/icons/Email.svg";
   }
 
@@ -101,38 +122,63 @@ const getIconPath = (kind: string, url: string = "") => {
   return iconName ? `/icons/${iconName}.svg` : "/icons/Link.svg";
 };
 
+const inferLinkKind = (url: string) => {
+  const lowerUrl = url.toLowerCase();
+
+  if (lowerUrl.includes("instagram.com")) return "INSTAGRAM";
+  if (lowerUrl.includes("linkedin.com")) return "LINKEDIN";
+  if (lowerUrl.includes("youtube.com") || lowerUrl.includes("youtu.be")) {
+    return "YOUTUBE";
+  }
+  if (lowerUrl.includes("tiktok.com")) return "TIKTOK";
+  if (lowerUrl.includes("wa.me") || lowerUrl.includes("whatsapp")) {
+    return "WHATSAPP";
+  }
+  if (lowerUrl.includes("spotify.com")) return "SPOTIFY";
+  if (lowerUrl.includes("telegram.me") || lowerUrl.includes("t.me")) {
+    return "TELEGRAM";
+  }
+  if (lowerUrl.includes("behance.net")) return "BEHANCE";
+  if (lowerUrl.includes("dribbble.com")) return "DRIBBBLE";
+  if (lowerUrl.includes("github.com")) return "LINK";
+  if (lowerUrl.startsWith("mailto:")) return "EMAIL";
+
+  return "LINK";
+};
+
 const container: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
+      staggerChildren: 0.08,
+      delayChildren: 0.12,
     },
   },
 };
 
 const item: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.48,
       ease: [0.23, 1, 0.32, 1],
     },
   },
 };
 
 export function ProfileView({ profile }: { profile: Profile }) {
-  const accentColor = profile.themeAccent || "var(--primary)";
+  const accentColor = profile.themeAccent || "var(--foreground)";
   const fontStyle = "var(--font-montserrat), ui-sans-serif, system-ui";
   const titleFont = "var(--font-onest), sans-serif";
+  const reduceMotion = useReducedMotion();
 
   const topLevelLinks = useMemo(() => {
-    return (profile.MaguiConnectLink || []).filter(
-      (l) => !l.sectionId && l.isActive
-    );
+    return (profile.MaguiConnectLink || [])
+      .filter((l) => !l.sectionId && l.isActive)
+      .filter(isLinkVisible);
   }, [profile.MaguiConnectLink]);
 
   const whatsappUrl = profile.whatsapp
@@ -141,208 +187,264 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
   return (
     <div
-      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden p-4 md:p-8 lg:p-12"
-      style={{ fontFamily: fontStyle } as React.CSSProperties}
+      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden lg:h-screen lg:overflow-hidden"
+      style={{ fontFamily: fontStyle }}
     >
-      <main className="w-full">
+      <div className="pointer-events-none absolute inset-0">
         <motion.div
-          className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16"
+          animate={reduceMotion ? undefined : { opacity: [0.14, 0.22, 0.14] }}
+          transition={
+            reduceMotion
+              ? undefined
+              : { duration: 9, ease: "easeInOut", repeat: Infinity }
+          }
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 15% 20%, color-mix(in oklab, var(--background) 70%, transparent), transparent 28%)",
+          }}
+        />
+      </div>
+
+      <main className="relative z-10 w-full px-4 py-4 md:px-8 md:py-8 lg:h-full lg:px-12 lg:py-6">
+        <motion.div
+          className="grid grid-cols-1 gap-8 lg:h-full lg:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.35fr)] lg:gap-10"
           variants={container}
           initial="hidden"
           animate="show"
         >
-          {/* Left Column: Profile Info */}
-          <motion.div className="lg:col-span-4" variants={item}>
-            <div className="sticky top-8 flex flex-col items-center p-8 text-center">
-              <div className="group relative mb-10">
-                {profile.avatarUrl ? (
-                  <div className="relative h-44 w-44 overflow-hidden rounded-full shadow-2xl grayscale-[0.6] transition-all duration-700 group-hover:grayscale-0 md:h-56 md:w-56">
-                    <Image
-                      src={profile.avatarUrl}
-                      alt={profile.displayName}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
+          <motion.div variants={item}>
+            <div className="p-2 md:p-4 lg:h-full lg:overflow-hidden">
+              <div className="flex items-start justify-between gap-4">
+                <div className="w-full space-y-6">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 md:gap-5">
+                      {profile.avatarUrl ? (
+                        <motion.div
+                          whileHover={
+                            reduceMotion ? undefined : { scale: 1.02, y: -2 }
+                          }
+                          className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[1.4rem] md:h-22 md:w-22"
+                        >
+                          <Image
+                            src={profile.avatarUrl}
+                            alt={profile.displayName}
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                        </motion.div>
+                      ) : (
+                        <div className="bg-muted flex h-18 w-18 shrink-0 items-center justify-center rounded-[1.4rem] text-2xl font-semibold md:h-22 md:w-22">
+                          {profile.displayName.charAt(0)}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <h1
+                          className="text-2xl font-semibold tracking-[-0.05em] md:text-3xl"
+                          style={{ fontFamily: titleFont }}
+                        >
+                          {profile.displayName}
+                        </h1>
+                        {profile.location && (
+                          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                            <MapPin size={14} />
+                            {profile.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-5">
+                      <h2
+                        className="text-4xl leading-[0.9] font-semibold tracking-[-0.08em] text-balance md:text-5xl lg:text-[4.5rem]"
+                        style={{ fontFamily: titleFont }}
+                      >
+                        {profile.headline || profile.displayName}
+                      </h2>
+                      {profile.bio && (
+                        <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
+                          {profile.bio}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="bg-muted flex h-44 w-44 items-center justify-center rounded-full text-5xl font-bold md:h-52 md:w-52">
-                    {profile.displayName.charAt(0)}
+
+                  <div className="flex flex-wrap gap-2">
+                    {profile.companyName && (
+                      <span className="border-foreground/8 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase">
+                        {profile.companyName}
+                      </span>
+                    )}
+                    {profile.professionalCategory && (
+                      <span className="border-foreground/8 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase">
+                        {profile.professionalCategory}
+                      </span>
+                    )}
                   </div>
-                )}
-                <div className="ring-background absolute right-4 bottom-4 h-6 w-6 rounded-full bg-emerald-500 shadow-lg ring-4" />
-              </div>
 
-              <h1
-                className="text-6xl font-extrabold tracking-tighter md:text-8xl"
-                style={{ fontFamily: titleFont }}
-              >
-                {profile.displayName}
-              </h1>
+                  <div className="flex w-full flex-col gap-3">
+                    {profile.primaryCtaUrl && profile.primaryCtaLabel && (
+                      <motion.a
+                        whileHover={
+                          reduceMotion ? undefined : { y: -2, scale: 1.01 }
+                        }
+                        whileTap={reduceMotion ? undefined : { scale: 0.99 }}
+                        href={profile.primaryCtaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-white"
+                        style={{ backgroundColor: accentColor }}
+                      >
+                        {profile.primaryCtaLabel}
+                        <ExternalLink size={16} />
+                      </motion.a>
+                    )}
 
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {profile.professionalCategory && (
-                  <span className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase">
-                    {profile.professionalCategory}
-                  </span>
-                )}
-                {profile.companyName && (
-                  <span className="bg-muted text-muted-foreground rounded-full px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase">
-                    {profile.companyName}
-                  </span>
-                )}
-              </div>
+                    {profile.secondaryCtaUrl && profile.secondaryCtaLabel && (
+                      <motion.a
+                        whileHover={
+                          reduceMotion ? undefined : { y: -2, scale: 1.01 }
+                        }
+                        whileTap={reduceMotion ? undefined : { scale: 0.99 }}
+                        href={profile.secondaryCtaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-foreground/[0.05] inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium"
+                      >
+                        {profile.secondaryCtaLabel}
+                        <ArrowRight size={16} />
+                      </motion.a>
+                    )}
+                  </div>
 
-              {profile.location && (
-                <div className="text-muted-foreground mt-4 flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase opacity-60">
-                  <MapPin size={14} /> {profile.location}
-                </div>
-              )}
-
-              {profile.headline && (
-                <p
-                  className="mt-10 text-2xl leading-tight font-bold tracking-tight opacity-80"
-                  style={{ fontFamily: titleFont }}
-                >
-                  {profile.headline}
-                </p>
-              )}
-
-              {profile.bio && (
-                <p className="text-muted-foreground mt-6 max-w-sm text-center text-sm leading-relaxed font-medium">
-                  {profile.bio}
-                </p>
-              )}
-
-              {/* Quick Actions */}
-              <div className="mt-12 flex w-full max-w-xs flex-col gap-4">
-                {profile.primaryCtaUrl && profile.primaryCtaLabel && (
-                  <motion.a
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    href={profile.primaryCtaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-5 text-sm font-black tracking-[0.2em] uppercase shadow-xl transition-all"
-                    style={{ backgroundColor: accentColor, color: "white" }}
-                  >
-                    {profile.primaryCtaLabel}
-                    <ExternalLink size={18} />
-                  </motion.a>
-                )}
-
-                <div className="flex items-center justify-center gap-12 py-6">
-                  {whatsappUrl && (
-                    <QuickAction
-                      iconPath="/icons/Whatsapp.svg"
-                      href={whatsappUrl}
-                      label="WhatsApp"
-                    />
-                  )}
-                  {profile.publicEmail && (
-                    <QuickAction
-                      iconPath={getIconPath("EMAIL", profile.publicEmail)}
-                      href={`mailto:${profile.publicEmail}`}
-                      label="Email"
-                    />
-                  )}
-                  {profile.publicPhone && (
-                    <QuickAction
-                      iconPath="/icons/Link.svg"
-                      href={`tel:${profile.publicPhone}`}
-                      label="Phone"
-                    />
-                  )}
+                  <div className="grid w-full grid-cols-2 gap-3">
+                    {whatsappUrl && (
+                      <QuickAction
+                        iconPath="/icons/Whatsapp.svg"
+                        href={whatsappUrl}
+                        label="WhatsApp"
+                      />
+                    )}
+                    {profile.publicEmail && (
+                      <QuickAction
+                        iconPath={getIconPath("EMAIL", profile.publicEmail)}
+                        href={`mailto:${profile.publicEmail}`}
+                        label="Email"
+                        fallbackIcon={<Mail size={18} />}
+                      />
+                    )}
+                    {profile.publicPhone && (
+                      <QuickAction
+                        iconPath="/icons/Link.svg"
+                        href={`tel:${profile.publicPhone}`}
+                        label="Phone"
+                        fallbackIcon={<Phone size={18} />}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Right Column: Links & Sections */}
-          <motion.div
-            className="space-y-16 lg:col-span-8 lg:pt-8"
-            variants={item}
-          >
-            {/* Banner */}
-            <div className="group relative h-48 w-full overflow-hidden rounded-3xl md:h-80">
-              <Image
-                src={profile.bannerUrl || "/images/placeholder.svg"}
-                alt="Banner"
-                fill
-                className="object-cover transition-all duration-1000"
-              />
-
-              <div className="absolute top-6 right-6 z-50">
-                <ThemeToggle />
-              </div>
-            </div>
-
-            {/* Top Level Links */}
-            <div className="flex flex-col">
-              {topLevelLinks.map((link) => (
-                <LinkCard
-                  key={link.id}
-                  link={link}
-                  accentColor={accentColor}
-                  titleFont={titleFont}
-                />
-              ))}
-            </div>
-
-            {/* Sections */}
-            {(profile.MaguiConnectSection || [])
-              .filter((s) => s.isActive)
-              .map((section) => {
-                const sectionLinks = (section.MaguiConnectLink || []).filter(
-                  (l) => l.isActive
-                );
-                if (sectionLinks.length === 0) return null;
-
-                return (
-                  <div key={section.id} className="space-y-8 pt-8">
-                    <div className="flex items-center gap-6">
-                      <h2
-                        className="text-xl font-bold tracking-tight opacity-30"
-                        style={{ fontFamily: titleFont }}
-                      >
-                        {section.title}
-                      </h2>
-                      <div className="bg-foreground/5 h-px flex-1" />
-                    </div>
-                    <div className="flex flex-col">
-                      {sectionLinks.map((link) => (
-                        <LinkCard
-                          key={link.id}
-                          link={link}
-                          accentColor={accentColor}
-                          titleFont={titleFont}
-                        />
-                      ))}
-                    </div>
+          <motion.div className="relative lg:h-full" variants={item}>
+            <ScrollArea className="h-screen w-full pr-5 pb-5">
+              <div className="space-y-6 pb-6 lg:pr-4">
+                <div className="relative h-56 overflow-hidden rounded-[2rem] md:h-[24rem]">
+                  <Image
+                    src={profile.bannerUrl || "/images/placeholder.svg"}
+                    alt="Banner"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.14)_68%,transparent_100%)]" />
+                  <div className="absolute top-5 right-5 z-20">
+                    <ThemeToggle />
                   </div>
-                );
-              })}
-
-            {/* Signature */}
-            <footer className="flex justify-center pt-12 pb-8">
-              <a
-                href="https://magui.studio"
-                target="_blank"
-                className="flex w-fit flex-col items-center gap-1 opacity-30 transition-none"
-              >
-                <span className="text-muted-foreground text-[8px] font-black tracking-[0.8em] uppercase">
-                  Powered by
-                </span>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-2xl font-black tracking-tighter">
-                    MAGUI
-                  </span>
-                  <span className="text-2xl font-light tracking-tighter opacity-60">
-                    .studio
-                  </span>
+                  {(profile.heroKicker ||
+                    profile.heroHeadline ||
+                    profile.heroDescription) && (
+                    <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                      <div className="space-y-2 md:space-y-3">
+                        {profile.heroKicker && (
+                          <div className="text-[11px] font-medium tracking-[0.24em] text-white uppercase">
+                            {profile.heroKicker}
+                          </div>
+                        )}
+                        {profile.heroHeadline && (
+                          <div
+                            className="text-2xl font-semibold tracking-[-0.05em] text-white md:text-[2.8rem]"
+                            style={{ fontFamily: titleFont }}
+                          >
+                            {profile.heroHeadline}
+                          </div>
+                        )}
+                        {profile.heroDescription && (
+                          <p className="text-sm leading-relaxed text-white md:text-base">
+                            {profile.heroDescription}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </a>
-            </footer>
+
+                <div className="space-y-3">
+                  {topLevelLinks.map((link) => (
+                    <LinkCard
+                      key={link.id}
+                      link={link}
+                      titleFont={titleFont}
+                      accentColor={accentColor}
+                    />
+                  ))}
+                </div>
+
+                {(profile.MaguiConnectSection || [])
+                  .filter((section) => section.isActive)
+                  .map((section) => {
+                    const sectionLinks = (section.MaguiConnectLink || [])
+                      .filter((link) => link.isActive)
+                      .filter(isLinkVisible);
+
+                    if (sectionLinks.length === 0) return null;
+
+                    return (
+                      <section key={section.id} className="space-y-4 pt-3">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-4">
+                            <h3
+                              className="text-lg font-semibold tracking-[-0.04em]"
+                              style={{ fontFamily: titleFont }}
+                            >
+                              {section.title}
+                            </h3>
+                            <div className="bg-foreground/8 h-px flex-1" />
+                          </div>
+                          {section.description && (
+                            <p className="text-muted-foreground text-sm leading-relaxed">
+                              {section.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-3">
+                          {sectionLinks.map((link) => (
+                            <LinkCard
+                              key={link.id}
+                              link={link}
+                              titleFont={titleFont}
+                              accentColor={accentColor}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
           </motion.div>
         </motion.div>
       </main>
@@ -354,92 +456,163 @@ function QuickAction({
   iconPath,
   href,
   label,
+  fallbackIcon,
 }: {
   iconPath: string;
   href: string;
   label: string;
+  fallbackIcon?: ReactNode;
 }) {
   return (
     <motion.a
-      whileHover={{ y: -6, scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col items-center justify-center gap-3 transition-all"
+      className="bg-foreground/[0.03] hover:bg-foreground/[0.05] flex items-center gap-3 rounded-[1.25rem] px-4 py-3 text-left transition-colors"
       title={label}
     >
-      <div className="relative flex h-14 w-14 items-center justify-center transition-colors">
-        <Image
-          src={iconPath}
-          alt={label}
-          width={42}
-          height={42}
-          className="object-contain"
-        />
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+        {iconPath ? (
+          <Image
+            src={iconPath}
+            alt={label}
+            width={32}
+            height={32}
+            className="object-contain"
+          />
+        ) : fallbackIcon ? (
+          <span className="text-foreground/80">{fallbackIcon}</span>
+        ) : null}
       </div>
-      <span className="text-[10px] font-black tracking-[0.2em] uppercase opacity-40">
-        {label}
-      </span>
+      <div className="min-w-0">
+        <span className="text-sm font-medium tracking-[-0.02em]">{label}</span>
+      </div>
     </motion.a>
   );
 }
 
 function LinkCard({
   link,
-  accentColor,
   titleFont,
+  accentColor,
 }: {
   link: MaguiConnectLink;
-  accentColor: string;
   titleFont: string;
+  accentColor: string;
 }) {
+  const description =
+    link.customShortDescription || link.url.replace(/^https?:\/\/(www\.)?/, "");
+  const countdownLabel = useCountdownLabel(link.expiresAt);
+
   return (
     <motion.a
-      whileHover={{ x: 10 }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.995 }}
       href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
       target={link.openInNewTab ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className="group border-foreground/5 hover:bg-foreground/[0.02] relative -mx-4 flex items-center gap-6 rounded-xl border-b px-4 py-10 transition-all"
+      className={`group relative flex items-center gap-4 rounded-[1.75rem] px-4 py-4 transition-all md:px-5 md:py-5 ${
+        link.isFeatured
+          ? "text-white shadow-[0_18px_40px_rgba(0,0,0,0.12)]"
+          : "hover:bg-foreground/[0.04] bg-transparent"
+      }`}
+      style={
+        link.isFeatured
+          ? {
+              backgroundColor: accentColor,
+            }
+          : undefined
+      }
     >
-      <div className="relative h-16 w-16 shrink-0">
+      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center md:h-18 md:w-18">
         <Image
-          src={getIconPath(link.kind, link.url)}
+          src={getIconPath(link.kind || inferLinkKind(link.url), link.url)}
           alt={link.label}
           fill
-          className="object-contain transition-transform duration-500 group-hover:scale-110"
+          className="object-contain p-3"
         />
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <span
-          className="text-3xl leading-none font-bold tracking-tight md:text-5xl"
-          style={{ fontFamily: titleFont }}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className="text-xl font-semibold tracking-[-0.05em] md:text-2xl"
+            style={{ fontFamily: titleFont }}
+          >
+            {link.label}
+          </span>
+        </div>
+
+        <p
+          className={`mt-1 truncate text-sm ${
+            link.isFeatured ? "text-foreground/70" : "text-muted-foreground"
+          }`}
+          style={
+            link.isFeatured ? { color: "rgba(255,255,255,0.78)" } : undefined
+          }
         >
-          {link.label}
-        </span>
-        <span className="text-muted-foreground mt-2 truncate text-xs font-black tracking-[0.2em] uppercase opacity-40">
-          {link.url.replace(/^https?:\/\/(www\.)?/, "")}
-        </span>
+          {description}
+        </p>
+        {countdownLabel && (
+          <p
+            className={`mt-1 text-xs ${
+              link.isFeatured ? "text-white/70" : "text-foreground/55"
+            }`}
+          >
+            {countdownLabel}
+          </p>
+        )}
       </div>
 
-      <div className="mr-4 flex h-12 w-12 items-center justify-center opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
-        <ArrowRight
-          size={32}
-          className="text-muted-foreground group-hover:text-foreground"
-        />
+      <div
+        className={`mr-2 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 ${
+          link.isFeatured ? "text-white/85" : "text-muted-foreground"
+        }`}
+      >
+        <ArrowRight size={22} strokeWidth={1.9} />
       </div>
-
-      {link.isFeatured && (
-        <div
-          className="absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-full"
-          style={{
-            backgroundColor: accentColor,
-            boxShadow: `0 0 25px ${accentColor}`,
-          }}
-        />
-      )}
     </motion.a>
   );
+}
+
+function isLinkVisible(link: MaguiConnectLink) {
+  const now = new Date();
+  const startsAt = link.startsAt ? new Date(link.startsAt) : null;
+  const expiresAt = link.expiresAt ? new Date(link.expiresAt) : null;
+
+  if (startsAt && startsAt > now) return false;
+  if (expiresAt && expiresAt <= now) return false;
+
+  return true;
+}
+
+function useCountdownLabel(expiresAtValue: string | Date | null) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!expiresAtValue) return;
+
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [expiresAtValue]);
+
+  if (!expiresAtValue) return null;
+
+  const expiresAt = new Date(expiresAtValue).getTime();
+  const diff = expiresAt - now;
+
+  if (diff <= 0) return null;
+
+  const totalSeconds = Math.floor(diff / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `Encerra em ${hours} horas, ${minutes} minutos e ${seconds} segundos.`;
 }

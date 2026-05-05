@@ -345,8 +345,10 @@ model MaguiConnectLink {
   sectionId           String?
   label               String
   url                 String
-  icon                String?
-  kind                String               @default("LINK")
+  customShortDescription String?
+  kind                String?              @default("LINK")
+  startsAt            DateTime?
+  expiresAt           DateTime?
   isFeatured          Boolean              @default(false)
   openInNewTab        Boolean              @default(true)
   sortOrder           Int                  @default(0)
@@ -366,6 +368,7 @@ model MaguiConnectSection {
   profileId           String
   profile             MaguiConnectProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   title               String
+  description         String?
   sortOrder           Int                 @default(0)
   isActive            Boolean             @default(true)
   isCollapsible       Boolean             @default(false)
@@ -381,6 +384,9 @@ model MaguiConnectProfile {
   userId                 String                   @unique
   slug                   String?                  @unique
   displayName            String
+  heroKicker             String?
+  heroHeadline           String?
+  heroDescription        String?
   headline               String?
   bio                    String?
   avatarUrl              String?
@@ -395,10 +401,10 @@ model MaguiConnectProfile {
   publicPhone            String?
   primaryCtaLabel        String?
   primaryCtaUrl          String?
+  secondaryCtaLabel      String?
+  secondaryCtaUrl        String?
   domain                 String?                  @unique
   themeAccent            String?
-  themeBackground        String?                  @default("#0a0a0a")
-  themeForeground        String?                  @default("#f5f5f5")
   seoTitle               String?
   seoDescription         String?
   createdAt              DateTime                 @default(now())
