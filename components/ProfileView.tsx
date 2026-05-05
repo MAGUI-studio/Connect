@@ -15,8 +15,6 @@ type MaguiConnectLink = {
   isFeatured: boolean;
   isActive: boolean;
   openInNewTab: boolean;
-  startsAt: Date | string | null;
-  expiresAt: Date | string | null;
   sectionId: string | null;
 };
 
@@ -131,22 +129,11 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const fontStyle = "var(--font-montserrat), ui-sans-serif, system-ui";
   const titleFont = "var(--font-onest), sans-serif";
 
-  const now = new Date();
-
-  const isLinkActive = (link: MaguiConnectLink) => {
-    if (!link.isActive) return false;
-    const start = link.startsAt ? new Date(link.startsAt) : null;
-    const end = link.expiresAt ? new Date(link.expiresAt) : null;
-    if (start && now < start) return false;
-    if (end && now > end) return false;
-    return true;
-  };
-
   const topLevelLinks = useMemo(() => {
     return (profile.MaguiConnectLink || []).filter(
-      (l) => !l.sectionId && isLinkActive(l)
+      (l) => !l.sectionId && l.isActive
     );
-  }, [profile.MaguiConnectLink, now, isLinkActive]);
+  }, [profile.MaguiConnectLink]);
 
   const whatsappUrl = profile.whatsapp
     ? `https://wa.me/${profile.whatsapp.replace(/\D/g, "")}${profile.whatsappMessage ? `?text=${encodeURIComponent(profile.whatsappMessage)}` : ""}`
@@ -282,9 +269,8 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 src={profile.bannerUrl || "/images/placeholder.svg"}
                 alt="Banner"
                 fill
-                className="object-cover grayscale-[0.4] transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
+                className="object-cover transition-all duration-1000"
               />
-              <div className="from-background/40 absolute inset-0 bg-gradient-to-t to-transparent" />
 
               <div className="absolute top-6 right-6 z-50">
                 <ThemeToggle />
@@ -308,7 +294,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
               .filter((s) => s.isActive)
               .map((section) => {
                 const sectionLinks = (section.MaguiConnectLink || []).filter(
-                  isLinkActive
+                  (l) => l.isActive
                 );
                 if (sectionLinks.length === 0) return null;
 

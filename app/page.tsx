@@ -13,10 +13,23 @@ async function getProfile(slug?: string, host?: string) {
   const isLocalhost =
     host?.includes("localhost") || host?.startsWith("127.0.0.1");
 
+  const linkSelect = {
+    id: true,
+    label: true,
+    url: true,
+    kind: true,
+    icon: true,
+    isFeatured: true,
+    isActive: true,
+    openInNewTab: true,
+    sectionId: true,
+  };
+
   const include = {
     MaguiConnectLink: {
       where: { isActive: true },
       orderBy: { sortOrder: "asc" as const },
+      select: linkSelect,
     },
     MaguiConnectSection: {
       where: { isActive: true },
@@ -25,6 +38,7 @@ async function getProfile(slug?: string, host?: string) {
         MaguiConnectLink: {
           where: { isActive: true },
           orderBy: { sortOrder: "asc" as const },
+          select: linkSelect,
         },
       },
     },
@@ -33,7 +47,6 @@ async function getProfile(slug?: string, host?: string) {
   const select = {
     id: true,
     userId: true,
-    status: true,
     slug: true,
     displayName: true,
     headline: true,
@@ -56,8 +69,6 @@ async function getProfile(slug?: string, host?: string) {
     themeForeground: true,
     seoTitle: true,
     seoDescription: true,
-    publishedAt: true,
-    lastSyncedAt: true,
     createdAt: true,
     updatedAt: true,
     ...include,
@@ -155,35 +166,6 @@ export default async function MaguiConnectPage(props: Props) {
       );
     }
     notFound();
-  }
-
-  if (profile.status === "PAUSED") {
-    return (
-      <div className="bg-background text-foreground relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-6 font-sans antialiased">
-        <div className="absolute top-8 right-8 z-50">
-          <ThemeToggle />
-        </div>
-
-        <div className="relative z-10 w-full max-w-[440px]">
-          <div className="p-10 text-center md:p-16">
-            <div className="bg-foreground/5 mx-auto mb-10 flex h-20 w-20 items-center justify-center rounded-3xl">
-              <span className="text-4xl">⏳</span>
-            </div>
-            <h1 className="text-3xl font-black tracking-tight">
-              Profile Paused
-            </h1>
-            <p className="text-muted-foreground mt-6 text-base leading-relaxed">
-              This profile is currently offline. Please check back later or
-              contact the owner.
-            </p>
-            <div className="via-foreground/5 mt-12 h-px w-full bg-gradient-to-r from-transparent to-transparent" />
-            <p className="mt-10 text-[10px] font-black tracking-[0.6em] uppercase opacity-20">
-              MAGUI.STUDIO
-            </p>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (

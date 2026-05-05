@@ -353,8 +353,6 @@ model MaguiConnectLink {
   sortOrder           Int                  @default(0)
   isActive            Boolean              @default(true)
   clickCount          Int                  @default(0)
-  startsAt            DateTime?
-  expiresAt           DateTime?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   MaguiConnectProfile MaguiConnectProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
@@ -382,7 +380,6 @@ model MaguiConnectSection {
 model MaguiConnectProfile {
   id                     String                   @id @default(cuid())
   userId                 String                   @unique
-  status                 MaguiConnectStatus       @default(DRAFT)
   slug                   String?                  @unique
   displayName            String
   headline               String?
@@ -405,30 +402,13 @@ model MaguiConnectProfile {
   themeForeground        String?                  @default("#f5f5f5")
   seoTitle               String?
   seoDescription         String?
-  publishedAt            DateTime?
-  lastSyncedAt           DateTime?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   MaguiConnectLink       MaguiConnectLink[]
   MaguiConnectSection    MaguiConnectSection[]
   User                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  MaguiConnectPublishLog MaguiConnectPublishLog[]
 
   @@index([domain])
-  @@index([status])
-}
-
-model MaguiConnectPublishLog {
-  id                  String              @id @default(cuid())
-  profileId           String
-  event               String
-  status              String
-  message             String?
-  payload             Json?
-  createdAt           DateTime            @default(now())
-  MaguiConnectProfile MaguiConnectProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  @@index([profileId, createdAt])
 }
 
 model MessageTemplate {
@@ -855,12 +835,6 @@ enum LeadStatus {
   NEGOCIACAO
   CONVERTIDO
   DESCARTADO
-}
-
-enum MaguiConnectStatus {
-  DRAFT
-  PUBLISHED
-  PAUSED
 }
 
 enum NotificationType {
