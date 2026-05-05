@@ -13,6 +13,10 @@ async function getProfile(slug?: string, host?: string) {
   const isLocalhost =
     host?.includes("localhost") || host?.startsWith("127.0.0.1");
 
+  // Normalize host: strip common subdomains for profile lookup
+  const normalizeHost = (h: string) => h.replace(/^(bio\.|www\.)/, "");
+  const normalizedHost = host ? normalizeHost(host) : host;
+
   const linkSelect = {
     id: true,
     label: true,
@@ -81,7 +85,7 @@ async function getProfile(slug?: string, host?: string) {
     });
   } else if (host && !isLocalhost) {
     return await prisma.maguiConnectProfile.findUnique({
-      where: { domain: host },
+      where: { domain: normalizedHost as string },
       select,
     });
   }
