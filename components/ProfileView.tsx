@@ -346,6 +346,33 @@ export function ProfileView({ profile }: { profile: Profile }) {
                       />
                     )}
                   </div>
+
+                  <motion.a
+                    variants={item}
+                    href="https://magui.studio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group mt-12 flex w-fit items-center gap-3.5 opacity-30 grayscale transition-all duration-700 hover:opacity-100 hover:grayscale-0"
+                  >
+                    <span className="text-muted-foreground text-[10px] font-medium tracking-[0.2em] uppercase">
+                      Oferecido por
+                    </span>
+                    <div className="bg-muted-foreground/30 group-hover:bg-foreground/20 h-3 w-px transition-colors" />
+                    <div className="relative h-3.5 w-20">
+                      <Image
+                        src="/logos/LOGO_MAGUI_DM.svg"
+                        alt="MAGUI.studio"
+                        fill
+                        className="object-contain dark:hidden"
+                      />
+                      <Image
+                        src="/logos/LOGO_MAGUI_LM.svg"
+                        alt="MAGUI.studio"
+                        fill
+                        className="hidden object-contain dark:block"
+                      />
+                    </div>
+                  </motion.a>
                 </div>
               </div>
             </div>
