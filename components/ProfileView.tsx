@@ -129,6 +129,7 @@ const item: Variants = {
 export function ProfileView({ profile }: { profile: Profile }) {
   const accentColor = profile.themeAccent || "var(--primary)";
   const fontStyle = "var(--font-montserrat), ui-sans-serif, system-ui";
+  const titleFont = "var(--font-onest), sans-serif";
 
   const now = new Date();
 
@@ -156,10 +157,6 @@ export function ProfileView({ profile }: { profile: Profile }) {
       className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden p-4 md:p-8 lg:p-12"
       style={{ fontFamily: fontStyle } as React.CSSProperties}
     >
-      <div className="fixed top-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
-
       <main className="w-full">
         <motion.div
           className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16"
@@ -170,9 +167,9 @@ export function ProfileView({ profile }: { profile: Profile }) {
           {/* Left Column: Profile Info */}
           <motion.div className="lg:col-span-4" variants={item}>
             <div className="sticky top-8 flex flex-col items-center p-8 text-center">
-              <div className="relative mb-8">
+              <div className="group relative mb-10">
                 {profile.avatarUrl ? (
-                  <div className="relative h-44 w-44 overflow-hidden rounded-full shadow-2xl md:h-52 md:w-52">
+                  <div className="relative h-44 w-44 overflow-hidden rounded-full shadow-2xl grayscale-[0.6] transition-all duration-700 group-hover:grayscale-0 md:h-56 md:w-56">
                     <Image
                       src={profile.avatarUrl}
                       alt={profile.displayName}
@@ -189,11 +186,14 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 <div className="ring-background absolute right-4 bottom-4 h-6 w-6 rounded-full bg-emerald-500 shadow-lg ring-4" />
               </div>
 
-              <h1 className="text-4xl font-black tracking-tighter md:text-5xl">
+              <h1
+                className="text-6xl font-extrabold tracking-tighter md:text-8xl"
+                style={{ fontFamily: titleFont }}
+              >
                 {profile.displayName}
               </h1>
 
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {profile.professionalCategory && (
                   <span className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-[10px] font-black tracking-[0.1em] uppercase">
                     {profile.professionalCategory}
@@ -213,19 +213,22 @@ export function ProfileView({ profile }: { profile: Profile }) {
               )}
 
               {profile.headline && (
-                <p className="mt-8 text-xl leading-tight font-bold tracking-tight">
+                <p
+                  className="mt-10 text-2xl leading-tight font-bold tracking-tight opacity-80"
+                  style={{ fontFamily: titleFont }}
+                >
                   {profile.headline}
                 </p>
               )}
 
               {profile.bio && (
-                <p className="text-muted-foreground mt-4 text-sm leading-relaxed font-medium">
+                <p className="text-muted-foreground mt-6 max-w-sm text-center text-sm leading-relaxed font-medium">
                   {profile.bio}
                 </p>
               )}
 
               {/* Quick Actions */}
-              <div className="mt-10 flex w-full flex-col gap-4">
+              <div className="mt-12 flex w-full max-w-xs flex-col gap-4">
                 {profile.primaryCtaUrl && profile.primaryCtaLabel && (
                   <motion.a
                     whileHover={{ scale: 1.02, y: -2 }}
@@ -270,24 +273,33 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
           {/* Right Column: Links & Sections */}
           <motion.div
-            className="space-y-12 lg:col-span-8 lg:pt-8"
+            className="space-y-16 lg:col-span-8 lg:pt-8"
             variants={item}
           >
             {/* Banner */}
-            <div className="relative h-40 w-full overflow-hidden rounded-3xl md:h-64">
+            <div className="group relative h-48 w-full overflow-hidden rounded-3xl md:h-80">
               <Image
                 src={profile.bannerUrl || "/images/placeholder.svg"}
                 alt="Banner"
                 fill
-                className="object-cover"
+                className="object-cover grayscale-[0.4] transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
               />
               <div className="from-background/40 absolute inset-0 bg-gradient-to-t to-transparent" />
+
+              <div className="absolute top-6 right-6 z-50">
+                <ThemeToggle />
+              </div>
             </div>
 
             {/* Top Level Links */}
-            <div className="divide-foreground/5 flex flex-col divide-y">
+            <div className="flex flex-col">
               {topLevelLinks.map((link) => (
-                <LinkCard key={link.id} link={link} accentColor={accentColor} />
+                <LinkCard
+                  key={link.id}
+                  link={link}
+                  accentColor={accentColor}
+                  titleFont={titleFont}
+                />
               ))}
             </div>
 
@@ -301,19 +313,23 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 if (sectionLinks.length === 0) return null;
 
                 return (
-                  <div key={section.id} className="space-y-6 pt-8">
-                    <div className="flex items-center gap-4">
-                      <h2 className="text-sm font-black tracking-[0.4em] uppercase opacity-20">
+                  <div key={section.id} className="space-y-8 pt-8">
+                    <div className="flex items-center gap-6">
+                      <h2
+                        className="text-xl font-bold tracking-tight opacity-30"
+                        style={{ fontFamily: titleFont }}
+                      >
                         {section.title}
                       </h2>
                       <div className="bg-foreground/5 h-px flex-1" />
                     </div>
-                    <div className="divide-foreground/5 flex flex-col divide-y">
+                    <div className="flex flex-col">
                       {sectionLinks.map((link) => (
                         <LinkCard
                           key={link.id}
                           link={link}
                           accentColor={accentColor}
+                          titleFont={titleFont}
                         />
                       ))}
                     </div>
@@ -386,9 +402,11 @@ function QuickAction({
 function LinkCard({
   link,
   accentColor,
+  titleFont,
 }: {
   link: MaguiConnectLink;
   accentColor: string;
+  titleFont: string;
 }) {
   return (
     <motion.a
@@ -397,9 +415,9 @@ function LinkCard({
       href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
       target={link.openInNewTab ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className="group relative flex items-center gap-6 py-8 transition-all"
+      className="group border-foreground/5 hover:bg-foreground/[0.02] relative -mx-4 flex items-center gap-6 rounded-xl border-b px-4 py-10 transition-all"
     >
-      <div className="relative h-14 w-14 shrink-0">
+      <div className="relative h-16 w-16 shrink-0">
         <Image
           src={getIconPath(link.kind, link.url)}
           alt={link.label}
@@ -409,24 +427,27 @@ function LinkCard({
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <span className="text-2xl leading-none font-black tracking-tighter md:text-3xl">
+        <span
+          className="text-3xl leading-none font-bold tracking-tight md:text-5xl"
+          style={{ fontFamily: titleFont }}
+        >
           {link.label}
         </span>
-        <span className="text-muted-foreground mt-1 truncate text-[10px] font-black tracking-[0.2em] uppercase opacity-40">
+        <span className="text-muted-foreground mt-2 truncate text-xs font-black tracking-[0.2em] uppercase opacity-40">
           {link.url.replace(/^https?:\/\/(www\.)?/, "")}
         </span>
       </div>
 
-      <div className="mr-4 flex h-10 w-10 items-center justify-center opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
+      <div className="mr-4 flex h-12 w-12 items-center justify-center opacity-0 transition-all group-hover:translate-x-2 group-hover:opacity-100">
         <ArrowRight
-          size={24}
+          size={32}
           className="text-muted-foreground group-hover:text-foreground"
         />
       </div>
 
       {link.isFeatured && (
         <div
-          className="absolute top-1/2 -left-6 h-10 w-1 -translate-y-1/2 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.1)]"
+          className="absolute top-1/2 left-0 h-12 w-1 -translate-y-1/2 rounded-full"
           style={{
             backgroundColor: accentColor,
             boxShadow: `0 0 25px ${accentColor}`,

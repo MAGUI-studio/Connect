@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, JetBrains_Mono } from "next/font/google";
+import { Montserrat, JetBrains_Mono, Onest } from "next/font/google";
 import "./globals.css";
 import { WebVitals } from "@/components/WebVitals";
 import { ScrollDepthTracker } from "@/hooks/useScrollDepth";
@@ -10,6 +10,12 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const onest = Onest({
+  variable: "--font-onest",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -43,7 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${montserrat.variable} ${jetbrainsMono.variable} h-full font-sans antialiased`}
+      className={`${montserrat.variable} ${onest.variable} ${jetbrainsMono.variable} h-full font-sans antialiased`}
       suppressHydrationWarning
     >
       <body className="relative mx-auto flex min-h-full max-w-440 flex-col overflow-x-hidden font-sans">
