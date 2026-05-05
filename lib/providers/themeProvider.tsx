@@ -84,5 +84,3 @@ function ThemeHotkey() {
 
   return null;
 }
-
-export { ThemeProvider };
