@@ -187,7 +187,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
   return (
     <div
-      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden lg:h-screen lg:overflow-hidden"
+      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden xl:h-screen xl:overflow-hidden"
       style={{ fontFamily: fontStyle }}
     >
       <div className="pointer-events-none absolute inset-0">
@@ -208,13 +208,13 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
       <main className="relative z-10 w-full px-4 py-4 md:px-8 md:py-8 lg:h-full lg:px-12 lg:py-6">
         <motion.div
-          className="grid grid-cols-1 gap-8 lg:h-full lg:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.35fr)] lg:gap-10"
+          className="grid grid-cols-1 gap-8 xl:h-full xl:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.35fr)] xl:gap-10"
           variants={container}
           initial="hidden"
           animate="show"
         >
           <motion.div variants={item}>
-            <div className="p-2 md:p-4 lg:h-full lg:overflow-hidden">
+            <div className="p-2 md:p-4 xl:h-full xl:overflow-hidden">
               <div className="flex items-start justify-between gap-4">
                 <div className="w-full space-y-6">
                   <div className="space-y-6">
@@ -224,7 +224,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                           whileHover={
                             reduceMotion ? undefined : { scale: 1.02, y: -2 }
                           }
-                          className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[1.4rem] md:h-22 md:w-22"
+                          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.8rem] md:h-28 md:w-28"
                         >
                           <Image
                             src={profile.avatarUrl}
@@ -235,24 +235,25 @@ export function ProfileView({ profile }: { profile: Profile }) {
                           />
                         </motion.div>
                       ) : (
-                        <div className="bg-muted flex h-18 w-18 shrink-0 items-center justify-center rounded-[1.4rem] text-2xl font-semibold md:h-22 md:w-22">
+                        <div className="bg-muted flex h-24 w-24 shrink-0 items-center justify-center rounded-[1.8rem] text-3xl font-semibold md:h-28 md:w-28">
                           {profile.displayName.charAt(0)}
                         </div>
                       )}
 
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         <h1
-                          className="text-2xl font-semibold tracking-[-0.05em] md:text-3xl"
+                          className="text-2xl font-bold tracking-[-0.05em] md:text-3xl"
                           style={{ fontFamily: titleFont }}
                         >
                           {profile.displayName}
                         </h1>
-                        {profile.location && (
-                          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                            <MapPin size={14} />
-                            {profile.location}
-                          </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          {profile.professionalCategory && (
+                            <span className="text-muted-foreground text-[10px] font-bold tracking-[0.12em] uppercase opacity-70">
+                              {profile.professionalCategory}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -271,16 +272,17 @@ export function ProfileView({ profile }: { profile: Profile }) {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
                     {profile.companyName && (
-                      <span className="border-foreground/8 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase">
+                      <span className="bg-foreground/[0.05] text-muted-foreground rounded-full px-3 py-1 text-[10px] font-bold tracking-[0.12em] uppercase">
                         {profile.companyName}
                       </span>
                     )}
-                    {profile.professionalCategory && (
-                      <span className="border-foreground/8 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase">
-                        {profile.professionalCategory}
-                      </span>
+                    {profile.location && (
+                      <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-medium opacity-60">
+                        <MapPin size={13} />
+                        {profile.location}
+                      </div>
                     )}
                   </div>
 
@@ -350,7 +352,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
           </motion.div>
 
           <motion.div className="relative lg:h-full" variants={item}>
-            <ScrollArea className="h-screen w-full pr-5 pb-5">
+            <ScrollArea className="h-full w-full pr-5 pb-5 xl:h-screen">
               <div className="space-y-6 pb-6 lg:pr-4">
                 <div className="relative h-56 overflow-hidden rounded-[2rem] md:h-[24rem]">
                   <Image
@@ -515,7 +517,7 @@ function LinkCard({
       rel="noopener noreferrer"
       className={`group relative flex items-center gap-4 rounded-[1.75rem] px-4 py-4 transition-all md:px-5 md:py-5 ${
         link.isFeatured
-          ? "text-white shadow-[0_18px_40px_rgba(0,0,0,0.12)]"
+          ? "text-white"
           : "hover:bg-foreground/[0.04] bg-transparent"
       }`}
       style={
@@ -526,7 +528,7 @@ function LinkCard({
           : undefined
       }
     >
-      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center md:h-18 md:w-18">
+      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center md:h-20 md:w-20">
         <Image
           src={getIconPath(link.kind || inferLinkKind(link.url), link.url)}
           alt={link.label}
@@ -556,13 +558,7 @@ function LinkCard({
           {description}
         </p>
         {countdownLabel && (
-          <p
-            className={`mt-1 text-xs ${
-              link.isFeatured ? "text-white/70" : "text-foreground/55"
-            }`}
-          >
-            {countdownLabel}
-          </p>
+          <p className={`mt-1 text-xs text-red-500!`}>{countdownLabel}</p>
         )}
       </div>
 
