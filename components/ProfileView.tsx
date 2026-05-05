@@ -379,7 +379,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
           </motion.div>
 
           <motion.div className="relative lg:h-full" variants={item}>
-            <ScrollArea className="h-full w-full pr-5 pb-5 xl:h-screen">
+            <ScrollArea className="h-full w-full pb-5 xl:h-screen xl:pr-5">
               <div className="space-y-6 pb-6 lg:pr-4">
                 <div className="relative h-56 overflow-hidden rounded-[2rem] md:h-[24rem]">
                   <Image
