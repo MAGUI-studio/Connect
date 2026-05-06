@@ -1,141 +1,160 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { ProfileView } from "../components/ProfileView";
-import { ThemeToggle } from "../components/common/themeToggle";
-import { prisma } from "../src/utils/prisma";
+import type { Organization, Person, Thing, WithContext } from "schema-dts";
+import { ProfileView } from "@/components/ProfileView";
+import { ThemeToggle } from "@/components/common/themeToggle";
+import { JsonLd } from "@/utils/json-ld";
+import {
+  getCurrentRequestHost,
+  getProfileImage,
+  getProfileSeoDescription,
+  getProfileSeoTitle,
+  getProfileSiteName,
+  getProfileTwitterImage,
+  getProfileUrl,
+  getPublicProfileBySlugOrDomain,
+  getRobotsDirectives,
+  isLocalHost,
+  resolvePublicAssetUrl,
+} from "@/services/magui-connect-public";
 
 type Props = {
   searchParams: Promise<{ slug?: string }>;
 };
 
-async function getProfile(slug?: string, host?: string) {
-  const isLocalhost =
-    host?.includes("localhost") || host?.startsWith("127.0.0.1");
+function buildProfileJsonLd(
+  profile: NonNullable<
+    Awaited<ReturnType<typeof getPublicProfileBySlugOrDomain>>
+  >
+): WithContext<Thing> {
+  const url = getProfileUrl(profile);
+  const sameAs = profile.MaguiConnectLink.map((link) => link.url).filter(
+    Boolean
+  );
 
-  // Normalize host: strip common subdomains for profile lookup
-  const normalizeHost = (h: string) => h.replace(/^(bio\.|www\.)/, "");
-  const normalizedHost = host ? normalizeHost(host) : host;
-
-  const linkSelect = {
-    id: true,
-    label: true,
-    url: true,
-    customShortDescription: true,
-    kind: true,
-    startsAt: true,
-    expiresAt: true,
-    isFeatured: true,
-    isActive: true,
-    openInNewTab: true,
-    sectionId: true,
-  };
-
-  const include = {
-    MaguiConnectLink: {
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" as const },
-      select: linkSelect,
-    },
-    MaguiConnectSection: {
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" as const },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        isCollapsible: true,
-        isActive: true,
-        MaguiConnectLink: {
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" as const },
-          select: linkSelect,
-        },
-      },
-    },
-  };
-
-  const select = {
-    id: true,
-    userId: true,
-    slug: true,
-    displayName: true,
-    heroKicker: true,
-    heroHeadline: true,
-    heroDescription: true,
-    headline: true,
-    bio: true,
-    avatarUrl: true,
-    bannerUrl: true,
-    ogImageUrl: true,
-    professionalCategory: true,
-    location: true,
-    companyName: true,
-    whatsapp: true,
-    whatsappMessage: true,
-    publicEmail: true,
-    publicPhone: true,
-    primaryCtaLabel: true,
-    primaryCtaUrl: true,
-    secondaryCtaLabel: true,
-    secondaryCtaUrl: true,
-    domain: true,
-    themeAccent: true,
-    seoTitle: true,
-    seoDescription: true,
-    createdAt: true,
-    updatedAt: true,
-    ...include,
-  };
-
-  if (isLocalhost && slug) {
-    return await prisma.maguiConnectProfile.findUnique({
-      where: { slug },
-      select,
-    });
+  if (profile.entityType === "PERSON" || !profile.entityType) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name: profile.displayName,
+      url: url || undefined,
+      image: resolvePublicAssetUrl(profile.avatarUrl) || undefined,
+      description: getProfileSeoDescription(profile),
+      jobTitle: profile.jobTitle || undefined,
+      email: profile.publicEmail || undefined,
+      telephone: profile.publicPhone || undefined,
+      worksFor: profile.companyName
+        ? {
+            "@type": "Organization",
+            name: profile.companyName,
+          }
+        : undefined,
+      sameAs: sameAs.length > 0 ? sameAs : undefined,
+    } satisfies WithContext<Person>;
   }
 
-  if (host && !isLocalhost) {
-    return await prisma.maguiConnectProfile.findUnique({
-      where: { domain: normalizedHost as string },
-      select,
-    });
-  }
-
-  return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: getProfileSiteName(profile),
+    url: url || undefined,
+    logo:
+      resolvePublicAssetUrl(profile.logoUrl) ||
+      resolvePublicAssetUrl(profile.avatarUrl) ||
+      undefined,
+    image: getProfileImage(profile) || undefined,
+    description: getProfileSeoDescription(profile),
+    email: profile.publicEmail || undefined,
+    telephone: profile.publicPhone || undefined,
+    address: profile.location || undefined,
+    sameAs: sameAs.length > 0 ? sameAs : undefined,
+  } satisfies WithContext<Organization>;
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const resolvedSearchParams = await props.searchParams;
-  const headersList = await headers();
-  const host = headersList.get("host") || "";
-
-  const profile = await getProfile(resolvedSearchParams.slug, host);
+  const host = await getCurrentRequestHost();
+  const profile = await getPublicProfileBySlugOrDomain({
+    slug: resolvedSearchParams.slug,
+    host,
+  });
 
   if (!profile) return {};
 
+  const url = getProfileUrl(profile);
+  const title = getProfileSeoTitle(profile);
+  const description = getProfileSeoDescription(profile);
+  const siteName = getProfileSiteName(profile);
+  const ogImage = getProfileImage(profile);
+  const twitterImage = getProfileTwitterImage(profile);
+  const robots = isLocalHost(host)
+    ? getRobotsDirectives({ indexable: false, seoNoFollow: true })
+    : getRobotsDirectives(profile);
+  const twitterHandle = profile.twitterHandle
+    ? `@${profile.twitterHandle.replace(/^@/, "")}`
+    : undefined;
+  const logoUrl = resolvePublicAssetUrl(profile.logoUrl);
+  const iconUrl = resolvedSearchParams.slug
+    ? `/icon?slug=${encodeURIComponent(resolvedSearchParams.slug)}`
+    : "/icon";
+
   return {
-    title: (profile.seoTitle || profile.displayName) as string,
-    description: (profile.seoDescription || profile.headline) as string,
-    openGraph: {
-      title: (profile.seoTitle || profile.displayName) as string,
-      description: (profile.seoDescription || profile.headline) as string,
-      images: profile.ogImageUrl ? [profile.ogImageUrl] : [],
+    metadataBase: url ? new URL(url) : undefined,
+    title,
+    description,
+    applicationName: siteName,
+    keywords: profile.seoKeywords
+      ? profile.seoKeywords.split(",").map((item) => item.trim())
+      : undefined,
+    alternates: {
+      canonical: url || undefined,
     },
+    robots,
+    openGraph: {
+      type: "website",
+      locale: profile.locale?.replace("-", "_") || "pt_BR",
+      url: url || undefined,
+      title,
+      description,
+      siteName,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      creator: twitterHandle,
+      site: twitterHandle,
+      images: twitterImage ? [twitterImage] : [],
+    },
+    icons: {
+      icon: [{ url: iconUrl }],
+      shortcut: [iconUrl],
+      ...(logoUrl
+        ? {
+            apple: [{ url: logoUrl }],
+          }
+        : {}),
+    },
+    other: profile.themeColor
+      ? {
+          "theme-color": profile.themeColor,
+        }
+      : undefined,
   };
 }
 
 export default async function MaguiConnectPage(props: Props) {
   const resolvedSearchParams = await props.searchParams;
-  const headersList = await headers();
-  const host = headersList.get("host") || "";
+  const host = await getCurrentRequestHost();
 
-  const isLocalhost =
-    host.includes("localhost") || host.startsWith("127.0.0.1");
-  const profile = await getProfile(resolvedSearchParams.slug, host);
+  const profile = await getPublicProfileBySlugOrDomain({
+    slug: resolvedSearchParams.slug,
+    host,
+  });
 
   if (!profile) {
-    if (isLocalhost && !resolvedSearchParams.slug) {
+    if (isLocalHost(host) && !resolvedSearchParams.slug) {
       return (
         <div className="bg-background text-foreground relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-6 font-sans antialiased">
           <div className="pointer-events-none absolute inset-0">
@@ -155,7 +174,7 @@ export default async function MaguiConnectPage(props: Props) {
                   Local Renderer
                 </div>
                 <div className="bg-foreground/5 mb-8 flex h-20 w-20 items-center justify-center rounded-3xl shadow-inner">
-                  <span className="text-4xl">⚡</span>
+                  <span className="text-4xl">AI</span>
                 </div>
                 <h1 className="text-3xl font-extrabold tracking-[-0.05em] md:text-4xl">
                   Development Mode
@@ -196,9 +215,14 @@ export default async function MaguiConnectPage(props: Props) {
     notFound();
   }
 
+  const shouldNoIndex = isLocalHost(host) || profile.indexable === false;
+
   return (
-    <ProfileView
-      profile={profile as Parameters<typeof ProfileView>[0]["profile"]}
-    />
+    <>
+      {!shouldNoIndex && <JsonLd data={buildProfileJsonLd(profile)} />}
+      <ProfileView
+        profile={profile as Parameters<typeof ProfileView>[0]["profile"]}
+      />
+    </>
   );
 }

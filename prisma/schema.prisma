@@ -384,6 +384,7 @@ model MaguiConnectProfile {
   userId                 String                   @unique
   slug                   String?                  @unique
   displayName            String
+  siteName               String?
   heroKicker             String?
   heroHeadline           String?
   heroDescription        String?
@@ -391,9 +392,14 @@ model MaguiConnectProfile {
   bio                    String?
   avatarUrl              String?
   bannerUrl              String?
+  faviconUrl             String?
+  logoUrl                String?
   ogImageUrl             String?
+  twitterImageUrl        String?
   professionalCategory   String?
   location               String?
+  entityType             String?
+  jobTitle               String?
   companyName            String?
   whatsapp               String?
   whatsappMessage        String?
@@ -404,9 +410,16 @@ model MaguiConnectProfile {
   secondaryCtaLabel      String?
   secondaryCtaUrl        String?
   domain                 String?                  @unique
+  canonicalUrl           String?
+  locale                 String?
   themeAccent            String?
+  themeColor             String?
   seoTitle               String?
   seoDescription         String?
+  seoKeywords            String?
+  twitterHandle          String?
+  indexable              Boolean                  @default(true)
+  seoNoFollow            Boolean                  @default(false)
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   MaguiConnectLink       MaguiConnectLink[]

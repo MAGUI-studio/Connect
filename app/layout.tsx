@@ -3,8 +3,12 @@ import { Montserrat, JetBrains_Mono, Onest } from "next/font/google";
 import "./globals.css";
 import { WebVitals } from "@/components/WebVitals";
 import { ScrollDepthTracker } from "@/hooks/useScrollDepth";
-import { BRAND_CONFIG } from "@/constants/config";
 import { ThemeProvider } from "@/lib/providers/themeProvider";
+import {
+  getCurrentRequestHost,
+  getProfileLocale,
+  getPublicProfileBySlugOrDomain,
+} from "@/services/magui-connect-public";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -24,31 +28,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: BRAND_CONFIG.seo.defaultTitle,
-    template: BRAND_CONFIG.seo.titleTemplate,
-  },
-  description: BRAND_CONFIG.description,
-  openGraph: {
-    type: "website",
-    locale: BRAND_CONFIG.seo.locale,
-    url: BRAND_CONFIG.url,
-    siteName: BRAND_CONFIG.name,
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: BRAND_CONFIG.seo.twitterHandle,
-  },
+  title: "MAGUI Connect",
+  description: "Landing page profissional.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const host = await getCurrentRequestHost();
+  const profile = await getPublicProfileBySlugOrDomain({ host });
+  const lang = getProfileLocale(profile?.locale);
+
   return (
     <html
-      lang="en"
+      lang={lang}
       className={`${montserrat.variable} ${onest.variable} ${jetbrainsMono.variable} h-full font-sans antialiased`}
       suppressHydrationWarning
     >

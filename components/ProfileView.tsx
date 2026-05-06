@@ -230,6 +230,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                             src={profile.avatarUrl}
                             alt={profile.displayName}
                             fill
+                            sizes="(max-width: 768px) 96px, 112px"
                             className="object-cover"
                             priority
                           />
@@ -363,12 +364,14 @@ export function ProfileView({ profile }: { profile: Profile }) {
                         src="/logos/LOGO_MAGUI_DM.svg"
                         alt="MAGUI.studio"
                         fill
+                        sizes="80px"
                         className="object-contain dark:hidden"
                       />
                       <Image
                         src="/logos/LOGO_MAGUI_LM.svg"
                         alt="MAGUI.studio"
                         fill
+                        sizes="80px"
                         className="hidden object-contain dark:block"
                       />
                     </div>
@@ -386,6 +389,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                     src={profile.bannerUrl || "/images/placeholder.svg"}
                     alt="Banner"
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 60vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.14)_68%,transparent_100%)]" />
@@ -560,6 +564,7 @@ function LinkCard({
           src={getIconPath(link.kind || inferLinkKind(link.url), link.url)}
           alt={link.label}
           fill
+          sizes="80px"
           className="object-contain p-3"
         />
       </div>

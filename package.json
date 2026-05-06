@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "postinstall": "prisma generate",
-    "postbuild": "next-sitemap",
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint",

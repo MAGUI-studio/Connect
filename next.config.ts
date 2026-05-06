@@ -5,7 +5,7 @@ const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: utfs.io;
+    img-src 'self' blob: data: utfs.io ufs.sh;
     font-src 'self';
     object-src 'none';
     base-uri 'self';
@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "utfs.io",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ufs.sh",
         port: "",
         pathname: "/**",
       },
