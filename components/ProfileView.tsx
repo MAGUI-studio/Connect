@@ -116,6 +116,8 @@ const getIconPath = (kind: string, url: string = "") => {
     HOTMART: "Hotmart",
     KIWIFY: "Kiwify",
     EDUZZ: "Eduzz",
+    GITHUB: "Github",
+    IFOOD: "iFood",
   };
 
   const iconName = iconMap[normalizedKind];
@@ -130,7 +132,14 @@ const inferLinkKind = (url: string) => {
   if (lowerUrl.includes("youtube.com") || lowerUrl.includes("youtu.be")) {
     return "YOUTUBE";
   }
+  if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com"))
+    return "X";
   if (lowerUrl.includes("tiktok.com")) return "TIKTOK";
+  if (lowerUrl.includes("threads.net")) return "THREADS";
+  if (lowerUrl.includes("twitch.tv")) return "TWITCH";
+  if (lowerUrl.includes("discord.gg") || lowerUrl.includes("discord.com")) {
+    return "DISCORD";
+  }
   if (lowerUrl.includes("wa.me") || lowerUrl.includes("whatsapp")) {
     return "WHATSAPP";
   }
@@ -140,7 +149,28 @@ const inferLinkKind = (url: string) => {
   }
   if (lowerUrl.includes("behance.net")) return "BEHANCE";
   if (lowerUrl.includes("dribbble.com")) return "DRIBBBLE";
-  if (lowerUrl.includes("github.com")) return "LINK";
+  if (lowerUrl.includes("pinterest.com")) return "PINTEREST";
+  if (lowerUrl.includes("vimeo.com")) return "VIMEO";
+  if (lowerUrl.includes("medium.com")) return "MEDIUM";
+  if (lowerUrl.includes("artstation.com")) return "ARTSTATION";
+  if (lowerUrl.includes("github.com")) return "GITHUB";
+  if (lowerUrl.includes("ifood.com.br")) return "IFOOD";
+  if (lowerUrl.includes("amazon.com") || lowerUrl.includes("amzn.to"))
+    return "AMAZON";
+  if (lowerUrl.includes("aliexpress.com")) return "ALIEXPRESS";
+  if (lowerUrl.includes("shopee.com.br")) return "SHOPEE";
+  if (lowerUrl.includes("mercadolivre.com.br")) return "MERCADOLIVRE";
+  if (lowerUrl.includes("hotmart.com")) return "HOTMART";
+  if (lowerUrl.includes("kiwify.com.br")) return "KIWIFY";
+  if (lowerUrl.includes("eduzz.com")) return "EDUZZ";
+  if (
+    lowerUrl.includes("maps.google.com") ||
+    lowerUrl.includes("goo.gl/maps")
+  ) {
+    return "MAPS";
+  }
+  if (lowerUrl.includes("drive.google.com")) return "DRIVE";
+  if (lowerUrl.includes("music.apple.com")) return "APPLEMUSIC";
   if (lowerUrl.startsWith("mailto:")) return "EMAIL";
 
   return "LINK";
