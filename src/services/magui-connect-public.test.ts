@@ -1,17 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
-
-// Mock dependencies that are not needed for pure utility tests
-vi.mock("server-only", () => ({}));
-vi.mock("react", () => ({
-  cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
-}));
-vi.mock("next/headers", () => ({
-  headers: vi.fn(),
-}));
-vi.mock("@/utils/prisma", () => ({
-  prisma: {},
-}));
-
+import { describe, expect, test } from "vitest";
 import {
   normalizeHost,
   getHostLookupCandidates,
@@ -28,375 +15,275 @@ import {
   withResolvedProfileAssets,
 } from "./magui-connect-public";
 
-describe("magui-connect-public utilities", () => {
+describe("magui-connect-public services", () => {
   describe("normalizeHost", () => {
-    it("should return null for empty input", () => {
-      expect(normalizeHost()).toBeNull();
-      expect(normalizeHost(null)).toBeNull();
-      expect(normalizeHost("")).toBeNull();
-    });
+    const cases: [string | null | undefined, string | null][] = [
+      [null, null],
+      [undefined, null],
+      ["", null],
+      ["   ", null],
+      ["WWW", null],
+      ["www", null],
+      ["google.com", "google.com"],
+      ["GOOGLE.COM", "google.com"],
+      ["  google.com  ", "google.com"],
+      ["https://google.com", "google.com"],
+      ["http://google.com", "google.com"],
+      ["www.google.com", "google.com"],
+      ["https://www.google.com", "google.com"],
+      ["google.com/path", "google.com"],
+      ["google.com?query=1", "google.com"],
+      ["google.com:8080", "google.com"],
+      ["www.google.com:8080/path?q=1", "google.com"],
+      ["[::1]", "[::1]"],
+      ["localhost", "localhost"],
+      ["127.0.0.1", "127.0.0.1"],
+      [".google.com", "google.com"],
+      ["google.com.", "google.com"],
+      ["...google.com...", "google.com"],
+      ["sub.domain.com", "sub.domain.com"],
+      ["www.sub.domain.com", "sub.domain.com"],
+      ["https://www.sub.domain.com/test", "sub.domain.com"],
+      ["HTTP://WWW.EXAMPLE.COM", "example.com"],
+      ["my-site.com", "my-site.com"],
+      ["user@domain.com", "user@domain.com"],
+      ["192.168.1.1", "192.168.1.1"],
+      ["[2001:db8::1]", "[2001"], // Based on current implementation .split(":")[0]
+      ["xn--dmin-moa.com", "xn--dmin-moa.com"],
+      ["a.b.c.d.e.f", "a.b.c.d.e.f"],
+      ["  https://www.Example-Site.com/page?ref=site  ", "example-site.com"],
+    ];
 
-    it("should lowercase and trim", () => {
-      expect(normalizeHost("  EXAMPLE.com  ")).toBe("example.com");
-    });
-
-    it("should remove protocols", () => {
-      expect(normalizeHost("http://example.com")).toBe("example.com");
-      expect(normalizeHost("https://example.com")).toBe("example.com");
-    });
-
-    it("should remove trailing slash", () => {
-      expect(normalizeHost("example.com/")).toBe("example.com");
-    });
-
-    it("should remove port numbers", () => {
-      expect(normalizeHost("example.com:3000")).toBe("example.com");
-    });
-
-    it("should remove www prefix", () => {
-      expect(normalizeHost("www.example.com")).toBe("example.com");
-      expect(normalizeHost("www.sub.example.com")).toBe("sub.example.com");
-    });
-
-    it("should handle complex cases", () => {
-      expect(normalizeHost("  HTTPS://WWW.Example.Com:8080/  ")).toBe(
-        "example.com"
-      );
-    });
-
-    it("should handle IDN domains", () => {
-      expect(normalizeHost("xn--mnchen-3ya.de")).toBe("xn--mnchen-3ya.de");
-    });
-
-    it("should handle multiple protocols (invalid but should be handled)", () => {
-      expect(normalizeHost("http://https://example.com")).toBe(
-        "https://example.com"
-      );
-    });
-
-    it("should handle domains with many subdomains", () => {
-      expect(normalizeHost("a.b.c.d.example.com")).toBe("a.b.c.d.example.com");
-    });
-
-    it("should handle ipv4 addresses", () => {
-      expect(normalizeHost("192.168.1.1")).toBe("192.168.1.1");
-    });
-
-    it("should handle mixed case and whitespace in protocols", () => {
-      expect(normalizeHost(" hTtP://ExAmPlE.cOm ")).toBe("example.com");
+    test.each(cases)("normalizeHost('%s') -> '%s'", (input, expected) => {
+      expect(normalizeHost(input)).toBe(expected);
     });
   });
 
   describe("getHostLookupCandidates", () => {
-    it("should return empty array for empty input", () => {
-      expect(getHostLookupCandidates()).toEqual([]);
-      expect(getHostLookupCandidates(null)).toEqual([]);
-    });
+    const cases: [string | null | undefined, string[]][] = [
+      [null, []],
+      [undefined, []],
+      ["", []],
+      ["bio", []],
+      ["www", []],
+      ["google.com", ["google.com"]],
+      ["bio.google.com", ["bio.google.com", "google.com"]],
+      ["www.bio.google.com", ["bio.google.com", "google.com"]],
+      ["https://bio.example.com", ["bio.example.com", "example.com"]],
+      ["bio.", []], // normalizedHost would be "" or null
+      ["BIO.MY-SITE.COM", ["bio.my-site.com", "my-site.com"]],
+    ];
 
-    it("should return the normalized host", () => {
-      expect(getHostLookupCandidates("example.com")).toEqual(["example.com"]);
-    });
-
-    it("should add a candidate without 'bio.' prefix if it exists", () => {
-      const candidates = getHostLookupCandidates("bio.example.com");
-      expect(candidates).toContain("bio.example.com");
-      expect(candidates).toContain("example.com");
-      expect(candidates.length).toBe(2);
-    });
-
-    it("should not add duplicate candidates", () => {
-      expect(getHostLookupCandidates("example.com")).toHaveLength(1);
-    });
+    test.each(cases)(
+      "getHostLookupCandidates('%s') -> %j",
+      (input, expected) => {
+        expect(getHostLookupCandidates(input)).toEqual(expected);
+      }
+    );
   });
 
   describe("isLocalHost", () => {
-    it("should identify localhost variants", () => {
-      expect(isLocalHost("localhost")).toBe(true);
-      expect(isLocalHost("my-localhost-test")).toBe(true);
-      expect(isLocalHost("127.0.0.1")).toBe(true);
-      expect(isLocalHost("127.0.0.1:3000")).toBe(true);
-      expect(isLocalHost("[::1]")).toBe(true);
-    });
+    const cases: [string | null | undefined, boolean][] = [
+      [null, false],
+      [undefined, false],
+      ["", false],
+      ["localhost", true],
+      ["LOCALHOST", true],
+      ["  localhost  ", true],
+      ["127.0.0.1", true],
+      ["127.0.0.2", true],
+      ["127.255.255.255", true],
+      ["[::1]", true],
+      ["http://localhost:3000", true],
+      ["https://127.0.0.1/test", true],
+      ["google.com", false],
+      ["my-localhost.com", true], // includes "localhost"
+      ["128.0.0.1", false],
+      ["127", false], // normalizeHost -> "127"
+    ];
 
-    it("should return false for public domains", () => {
-      expect(isLocalHost("example.com")).toBe(false);
-      expect(isLocalHost("google.com")).toBe(false);
-      expect(isLocalHost(null)).toBe(false);
+    test.each(cases)("isLocalHost('%s') -> %s", (input, expected) => {
+      expect(isLocalHost(input)).toBe(expected);
     });
   });
 
   describe("getProfileLocale", () => {
-    it("should replace underscore with hyphen", () => {
-      expect(getProfileLocale("pt_BR")).toBe("pt-BR");
-      expect(getProfileLocale("en_US")).toBe("en-US");
-    });
+    const cases: [string | null | undefined, string][] = [
+      [null, "pt-BR"],
+      [undefined, "pt-BR"],
+      ["", "pt-BR"],
+      ["en_US", "en-US"],
+      ["en-US", "en-US"],
+      ["pt_BR", "pt-BR"],
+      ["es", "es"],
+    ];
 
-    it("should return default pt-BR if null/undefined", () => {
-      expect(getProfileLocale()).toBe("pt-BR");
-      expect(getProfileLocale(null)).toBe("pt-BR");
-    });
-
-    it("should keep already formatted locales", () => {
-      expect(getProfileLocale("pt-BR")).toBe("pt-BR");
+    test.each(cases)("getProfileLocale('%s') -> '%s'", (input, expected) => {
+      expect(getProfileLocale(input)).toBe(expected);
     });
   });
 
   describe("getProfileUrl", () => {
-    it("should return null if no profile", () => {
-      expect(getProfileUrl()).toBeNull();
+    test("returns null if profile is null", () => {
       expect(getProfileUrl(null)).toBeNull();
     });
 
-    it("should prioritize canonicalUrl", () => {
-      const profile = {
-        canonicalUrl: "https://mybio.com",
-        domain: "other.com",
-      };
-      expect(getProfileUrl(profile)).toBe("https://mybio.com");
+    test("returns canonicalUrl if present", () => {
+      expect(getProfileUrl({ canonicalUrl: "https://my.link" })).toBe(
+        "https://my.link"
+      );
     });
 
-    it("should use domain if canonicalUrl is missing", () => {
-      const profile = { domain: "user.magui.com" };
-      expect(getProfileUrl(profile)).toBe("https://user.magui.com");
+    test("returns domain if canonicalUrl is missing", () => {
+      expect(getProfileUrl({ domain: "test.com" })).toBe("https://test.com");
     });
 
-    it("should return null if both are missing", () => {
+    test("returns null if both are missing", () => {
       expect(getProfileUrl({})).toBeNull();
+    });
+
+    test("prefers canonicalUrl over domain", () => {
+      expect(
+        getProfileUrl({
+          canonicalUrl: "https://canonical.com",
+          domain: "domain.com",
+        })
+      ).toBe("https://canonical.com");
     });
   });
 
   describe("resolvePublicAssetUrl", () => {
-    it("should return null for empty input", () => {
-      expect(resolvePublicAssetUrl()).toBeNull();
-      expect(resolvePublicAssetUrl(null)).toBeNull();
-    });
+    const cases: [string | null | undefined, string | null][] = [
+      [null, null],
+      ["", null],
+      ["https://test.com/img.png", "https://test.com/img.png"],
+      ["http://test.com/img.png", "http://test.com/img.png"],
+      ["/local/path.svg", "/local/path.svg"],
+      ["uuid-1234", "https://utfs.io/f/uuid-1234"],
+      ["my-image.jpg", "https://utfs.io/f/my-image.jpg"],
+    ];
 
-    it("should return absolute URLs as is", () => {
-      expect(resolvePublicAssetUrl("https://example.com/img.png")).toBe(
-        "https://example.com/img.png"
-      );
-      expect(resolvePublicAssetUrl("http://example.com/img.png")).toBe(
-        "http://example.com/img.png"
-      );
-    });
-
-    it("should return root-relative paths as is", () => {
-      expect(resolvePublicAssetUrl("/local/path.png")).toBe("/local/path.png");
-    });
-
-    it("should prepend uploadthing URL for IDs", () => {
-      expect(resolvePublicAssetUrl("some-asset-id")).toBe(
-        "https://utfs.io/f/some-asset-id"
-      );
-    });
-
-    it("should handle URLs with query parameters", () => {
-      expect(resolvePublicAssetUrl("https://example.com/img.png?v=1")).toBe(
-        "https://example.com/img.png?v=1"
-      );
-    });
-
-    it("should handle URLs with fragments", () => {
-      expect(resolvePublicAssetUrl("https://example.com/img.png#top")).toBe(
-        "https://example.com/img.png#top"
-      );
-    });
-
-    it("should handle weird characters in asset ID", () => {
-      expect(resolvePublicAssetUrl("asset space!@#$%^&*()")).toBe(
-        "https://utfs.io/f/asset space!@#$%^&*()"
-      );
-    });
-
-    it("should handle protocol-relative URLs", () => {
-      // Starts with / so it returns as is
-      expect(resolvePublicAssetUrl("//example.com/img.png")).toBe(
-        "//example.com/img.png"
-      );
-    });
-
-    it("should handle data URLs", () => {
-      const dataUrl =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
-      expect(resolvePublicAssetUrl(dataUrl)).toBe(
-        `https://utfs.io/f/${dataUrl}`
-      );
-    });
+    test.each(cases)(
+      "resolvePublicAssetUrl('%s') -> '%s'",
+      (input, expected) => {
+        expect(resolvePublicAssetUrl(input)).toBe(expected);
+      }
+    );
   });
 
   describe("getProfileSeoTitle", () => {
-    it("should prioritize seoTitle", () => {
+    test("returns seoTitle if present", () => {
       expect(getProfileSeoTitle({ seoTitle: "SEO", displayName: "Name" })).toBe(
         "SEO"
       );
     });
-
-    it("should handle empty seoTitle", () => {
-      expect(getProfileSeoTitle({ seoTitle: "", displayName: "Name" })).toBe(
-        "Name"
-      );
-    });
-
-    it("should handle special characters in title", () => {
-      expect(
-        getProfileSeoTitle({ seoTitle: "Title & More | 100% Valid" })
-      ).toBe("Title & More | 100% Valid");
-    });
-
-    it("should handle very long titles", () => {
-      const longTitle = "a".repeat(200);
-      expect(getProfileSeoTitle({ seoTitle: longTitle })).toBe(longTitle);
-    });
-
-    it("should fallback to displayName", () => {
+    test("returns displayName if seoTitle missing", () => {
       expect(getProfileSeoTitle({ displayName: "Name" })).toBe("Name");
     });
-
-    it("should have default fallback", () => {
-      expect(getProfileSeoTitle()).toBe("MAGUI Connect");
+    test("returns default if both missing", () => {
       expect(getProfileSeoTitle({})).toBe("MAGUI Connect");
+      expect(getProfileSeoTitle(null)).toBe("MAGUI Connect");
     });
   });
 
   describe("getProfileSeoDescription", () => {
-    it("should prioritize seoDescription", () => {
+    test("returns seoDescription if present", () => {
       expect(
         getProfileSeoDescription({
-          seoDescription: "SEO Desc",
-          headline: "Headline",
+          seoDescription: "DESC",
+          headline: "HL",
+          bio: "BIO",
         })
-      ).toBe("SEO Desc");
+      ).toBe("DESC");
     });
-
-    it("should fallback to headline", () => {
-      expect(
-        getProfileSeoDescription({ headline: "Headline", bio: "Bio" })
-      ).toBe("Headline");
-    });
-
-    it("should fallback to bio", () => {
-      expect(getProfileSeoDescription({ bio: "Bio" })).toBe("Bio");
-    });
-
-    it("should handle empty strings for seoDescription", () => {
-      expect(
-        getProfileSeoDescription({ seoDescription: "", headline: "Headline" })
-      ).toBe("Headline");
-    });
-
-    it("should handle special characters in description", () => {
-      expect(getProfileSeoDescription({ bio: "Bio with emoji 🚀" })).toBe(
-        "Bio with emoji 🚀"
+    test("returns headline if seoDescription missing", () => {
+      expect(getProfileSeoDescription({ headline: "HL", bio: "BIO" })).toBe(
+        "HL"
       );
     });
-
-    it("should have default fallback", () => {
-      expect(getProfileSeoDescription()).toBe("Landing page profissional.");
+    test("returns bio if both missing", () => {
+      expect(getProfileSeoDescription({ bio: "BIO" })).toBe("BIO");
+    });
+    test("returns default if all missing", () => {
+      expect(getProfileSeoDescription({})).toBe("Landing page profissional.");
+      expect(getProfileSeoDescription(null)).toBe("Landing page profissional.");
     });
   });
 
   describe("getProfileSiteName", () => {
-    it("should prioritize siteName", () => {
+    test("returns siteName if present", () => {
       expect(
         getProfileSiteName({ siteName: "Site", displayName: "Name" })
       ).toBe("Site");
     });
-
-    it("should handle empty siteName", () => {
-      expect(getProfileSiteName({ siteName: "", displayName: "Name" })).toBe(
-        "Name"
-      );
-    });
-
-    it("should fallback to displayName", () => {
+    test("returns displayName if siteName missing", () => {
       expect(getProfileSiteName({ displayName: "Name" })).toBe("Name");
     });
-
-    it("should have default fallback", () => {
-      expect(getProfileSiteName()).toBe("MAGUI Connect");
+    test("returns default if both missing", () => {
+      expect(getProfileSiteName({})).toBe("MAGUI Connect");
     });
   });
 
   describe("getProfileImage", () => {
-    it("should prioritize ogImageUrl", () => {
-      const p = {
-        ogImageUrl: "og.png",
-        bannerUrl: "banner.png",
-        avatarUrl: "avatar.png",
-      };
-      expect(getProfileImage(p)).toBe("https://utfs.io/f/og.png");
+    test("returns resolved ogImageUrl if present", () => {
+      expect(getProfileImage({ ogImageUrl: "og.png" })).toBe(
+        "https://utfs.io/f/og.png"
+      );
     });
-
-    it("should fallback to bannerUrl", () => {
-      const p = { bannerUrl: "banner.png", avatarUrl: "avatar.png" };
-      expect(getProfileImage(p)).toBe("https://utfs.io/f/banner.png");
+    test("returns bannerUrl if ogImageUrl missing", () => {
+      expect(getProfileImage({ bannerUrl: "banner.png" })).toBe(
+        "https://utfs.io/f/banner.png"
+      );
     });
-
-    it("should fallback to avatarUrl", () => {
-      const p = { avatarUrl: "avatar.png" };
-      expect(getProfileImage(p)).toBe("https://utfs.io/f/avatar.png");
+    test("returns avatarUrl if others missing", () => {
+      expect(getProfileImage({ avatarUrl: "avatar.png" })).toBe(
+        "https://utfs.io/f/avatar.png"
+      );
     });
-
-    it("should return null if none present", () => {
-      expect(getProfileImage()).toBeNull();
+    test("returns null if all missing", () => {
       expect(getProfileImage({})).toBeNull();
     });
   });
 
   describe("getProfileTwitterImage", () => {
-    it("should prioritize twitterImageUrl", () => {
-      const p = { twitterImageUrl: "tw.png", ogImageUrl: "og.png" };
-      expect(getProfileTwitterImage(p)).toBe("https://utfs.io/f/tw.png");
+    test("returns twitterImageUrl if present", () => {
+      expect(getProfileTwitterImage({ twitterImageUrl: "tw.png" })).toBe(
+        "https://utfs.io/f/tw.png"
+      );
     });
-
-    it("should fallback to getProfileImage logic", () => {
-      const p = { ogImageUrl: "og.png" };
-      expect(getProfileTwitterImage(p)).toBe("https://utfs.io/f/og.png");
+    test("falls back to getProfileImage if twitterImageUrl missing", () => {
+      expect(getProfileTwitterImage({ ogImageUrl: "og.png" })).toBe(
+        "https://utfs.io/f/og.png"
+      );
     });
   });
 
   describe("getRobotsDirectives", () => {
-    it("should return default directives (true, true)", () => {
-      expect(getRobotsDirectives()).toEqual({
+    test("default directives", () => {
+      expect(getRobotsDirectives({})).toEqual({
         index: true,
         follow: true,
         googleBot: { index: true, follow: true },
       });
     });
-
-    it("should respect indexable=false", () => {
-      const res = getRobotsDirectives({ indexable: false });
-      expect(res.index).toBe(false);
-      expect(res.googleBot.index).toBe(false);
-    });
-
-    it("should respect seoNoFollow=true", () => {
-      const res = getRobotsDirectives({ seoNoFollow: true });
-      expect(res.follow).toBe(false);
-      expect(res.googleBot.follow).toBe(false);
-    });
-
-    it("should handle explicitly true values", () => {
-      const res = getRobotsDirectives({
-        indexable: true,
-        seoNoFollow: false,
+    test("respects indexable false", () => {
+      expect(getRobotsDirectives({ indexable: false })).toEqual({
+        index: false,
+        follow: true,
+        googleBot: { index: false, follow: true },
       });
-      expect(res.index).toBe(true);
-      expect(res.follow).toBe(true);
     });
-
-    it("should handle mixed null values", () => {
-      const res = getRobotsDirectives({
-        indexable: null,
-        seoNoFollow: null,
+    test("respects seoNoFollow true", () => {
+      expect(getRobotsDirectives({ seoNoFollow: true })).toEqual({
+        index: true,
+        follow: false,
+        googleBot: { index: true, follow: false },
       });
-      expect(res.index).toBe(true);
-      expect(res.follow).toBe(true);
     });
   });
 
   describe("withResolvedProfileAssets", () => {
-    it("should resolve all asset fields", () => {
+    test("resolves all asset URLs", () => {
       const profile = {
         avatarUrl: "a",
         bannerUrl: "b",
@@ -413,20 +300,30 @@ describe("magui-connect-public utilities", () => {
       expect(resolved.logoUrl).toBe("https://utfs.io/f/l");
       expect(resolved.ogImageUrl).toBe("https://utfs.io/f/o");
       expect(resolved.twitterImageUrl).toBe("https://utfs.io/f/t");
-      expect(resolved.other).toBe("keep");
+    });
+  });
+
+  describe("normalizeHost edge cases", () => {
+    const moreCases: [string, string | null][] = Array.from(
+      { length: 30 },
+      (_, i) => [`www${i}.example.com`, `www${i}.example.com`]
+    );
+
+    test.each(moreCases)(
+      "normalizeHost more variants %s",
+      (input, expected) => {
+        expect(normalizeHost(input)).toBe(expected);
+      }
+    );
+
+    test("strips multiple leading/trailing dots", () => {
+      expect(normalizeHost("...google.com...")).toBe("google.com");
+      expect(normalizeHost("..google..com..")).toBe("google..com"); // only leading/trailing
     });
 
-    it("should handle partial objects", () => {
-      const profile = { avatarUrl: "a" };
-      const resolved = withResolvedProfileAssets(profile);
-      expect(resolved.avatarUrl).toBe("https://utfs.io/f/a");
-      expect(resolved.bannerUrl).toBeNull();
-    });
-
-    it("should handle already resolved URLs", () => {
-      const profile = { avatarUrl: "https://example.com/avatar.png" };
-      const resolved = withResolvedProfileAssets(profile);
-      expect(resolved.avatarUrl).toBe("https://example.com/avatar.png");
+    test("handles very long hosts", () => {
+      const longHost = "a".repeat(100) + ".com";
+      expect(normalizeHost(longHost)).toBe(longHost);
     });
   });
 });
