@@ -1,6 +1,6 @@
 describe("Home Page", () => {
-  it("should load the home page", () => {
+  it("should load the home page in Development Mode on localhost", () => {
     cy.visit("/");
-    cy.get("main").should("exist");
+    cy.contains("Development Mode").should("exist");
   });
 });
