@@ -1,25 +1,9 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-  useEffect,
-  type ReactNode,
-  useSyncExternalStore,
-} from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import {
-  ArrowRight,
-  ExternalLink,
-  Mail,
-  MapPin,
-  Phone,
-  Sparkles,
-  Layout,
-  Link as LinkIcon,
-  Palette,
-} from "lucide-react";
+import { ArrowRight, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import { ScrollArea } from "../src/components/ui/scroll-area";
 import { ThemeToggle } from "./common/themeToggle";
 
@@ -738,117 +722,70 @@ function EmptyState({
 }) {
   return (
     <div className="bg-background text-foreground relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-6 py-12">
-      {/* Background Orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute -top-[10%] -left-[10%] h-[500px] w-[500px] rounded-full opacity-20 blur-[120px]"
-          style={{ backgroundColor: accentColor }}
-        />
-        <div
-          className="absolute -right-[10%] -bottom-[10%] h-[400px] w-[400px] rounded-full opacity-10 blur-[100px]"
-          style={{ backgroundColor: accentColor }}
-        />
-      </div>
-
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-2xl text-center"
+        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        className="relative z-10 w-full max-w-lg text-center"
       >
-        <div className="mb-8 flex justify-center">
-          <div className="relative h-20 w-48">
-            <Image
-              src="/logos/LOGO_MAGUI_DM.svg"
-              alt="MAGUI Connect"
-              fill
-              className="object-contain dark:hidden"
-            />
-            <Image
-              src="/logos/LOGO_MAGUI_LM.svg"
-              alt="MAGUI Connect"
-              fill
-              className="hidden object-contain dark:block"
-            />
-          </div>
+        <div className="mb-12 flex flex-col items-center gap-6">
+          <div
+            className="h-px w-12"
+            style={{
+              backgroundColor: `color-mix(in srgb, ${accentColor} 20%, currentColor)`,
+            }}
+          />
+          <span className="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase opacity-60">
+            Em Breve
+          </span>
+          <div
+            className="h-px w-12"
+            style={{
+              backgroundColor: `color-mix(in srgb, ${accentColor} 20%, currentColor)`,
+            }}
+          />
         </div>
 
         <h1
-          className="mb-4 text-4xl font-bold tracking-tight md:text-5xl"
+          className="mb-6 text-4xl font-bold tracking-tight md:text-5xl"
           style={{ fontFamily: titleFont }}
         >
-          Bem-vindo, {profile.displayName}!
+          {profile.displayName}
         </h1>
 
-        <p className="text-muted-foreground mx-auto mb-12 max-w-lg text-lg leading-relaxed">
-          Sua página MAGUI Connect está pronta para ganhar vida. Enquanto você
-          configura os detalhes no painel, veja como sua presença digital pode
-          brilhar:
+        <p className="text-muted-foreground mx-auto mb-16 max-w-sm text-sm leading-relaxed opacity-80">
+          Estamos preparando algo especial. Em breve, todos os links e novidades
+          estarão disponíveis aqui.
         </p>
 
-        <div className="mb-12 grid gap-4 text-left md:grid-cols-3">
-          <OnboardingStep
-            icon={<Layout size={24} />}
-            title="Sua Identidade"
-            description="Personalize seu avatar, bio e redes sociais."
-          />
-          <OnboardingStep
-            icon={<LinkIcon size={24} />}
-            title="Seus Links"
-            description="Adicione seus canais e organize em seções."
-          />
-          <OnboardingStep
-            icon={<Palette size={24} />}
-            title="Seu Design"
-            description="Escolha cores e temas que combinam com você."
-          />
-        </div>
-
-        <div className="flex flex-col items-center gap-6">
-          <div className="bg-foreground/[0.03] flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
-            <Sparkles size={16} className="text-amber-500" />
-            <span>Aguardando suas configurações no dashboard</span>
-          </div>
-
+        <div className="flex flex-col items-center gap-8">
           <motion.a
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ opacity: 1 }}
             href="https://magui.studio"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground group flex items-center gap-2 text-xs font-medium opacity-60 transition-opacity hover:opacity-100"
+            className="group flex flex-col items-center gap-4 opacity-40 grayscale transition-all duration-500 hover:grayscale-0"
           >
-            Powered by MAGUI.studio
-            <ArrowRight
-              size={12}
-              className="transition-transform group-hover:translate-x-1"
-            />
+            <span className="text-[9px] font-medium tracking-[0.2em] uppercase">
+              Desenvolvido por
+            </span>
+            <div className="relative h-4 w-24">
+              <Image
+                src="/logos/LOGO_MAGUI_DM.svg"
+                alt="MAGUI.studio"
+                fill
+                className="object-contain dark:hidden"
+              />
+              <Image
+                src="/logos/LOGO_MAGUI_LM.svg"
+                alt="MAGUI.studio"
+                fill
+                className="hidden object-contain dark:block"
+              />
+            </div>
           </motion.a>
         </div>
       </motion.div>
-    </div>
-  );
-}
-
-function OnboardingStep({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="bg-foreground/[0.03] border-foreground/[0.05] hover:bg-foreground/[0.05] flex flex-col gap-3 rounded-3xl border p-6 transition-colors">
-      <div className="text-foreground/80 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 shadow-sm dark:bg-black/20">
-        {icon}
-      </div>
-      <div>
-        <h3 className="mb-1 font-semibold tracking-tight">{title}</h3>
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {description}
-        </p>
-      </div>
     </div>
   );
 }
