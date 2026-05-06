@@ -16,6 +16,7 @@ import {
   getRobotsDirectives,
   isLocalHost,
   resolvePublicAssetUrl,
+  withResolvedProfileAssets,
 } from "@/services/magui-connect-public";
 
 type Props = {
@@ -81,19 +82,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   if (!profile) return {};
 
-  const url = getProfileUrl(profile);
-  const title = getProfileSeoTitle(profile);
-  const description = getProfileSeoDescription(profile);
-  const siteName = getProfileSiteName(profile);
-  const ogImage = getProfileImage(profile);
-  const twitterImage = getProfileTwitterImage(profile);
+  const resolvedProfile = withResolvedProfileAssets(profile);
+
+  const url = getProfileUrl(resolvedProfile);
+  const title = getProfileSeoTitle(resolvedProfile);
+  const description = getProfileSeoDescription(resolvedProfile);
+  const siteName = getProfileSiteName(resolvedProfile);
+  const ogImage = getProfileImage(resolvedProfile);
+  const twitterImage = getProfileTwitterImage(resolvedProfile);
   const robots = isLocalHost(host)
     ? getRobotsDirectives({ indexable: false, seoNoFollow: true })
-    : getRobotsDirectives(profile);
-  const twitterHandle = profile.twitterHandle
-    ? `@${profile.twitterHandle.replace(/^@/, "")}`
+    : getRobotsDirectives(resolvedProfile);
+  const twitterHandle = resolvedProfile.twitterHandle
+    ? `@${resolvedProfile.twitterHandle.replace(/^@/, "")}`
     : undefined;
-  const logoUrl = resolvePublicAssetUrl(profile.logoUrl);
+  const logoUrl = resolvePublicAssetUrl(resolvedProfile.logoUrl);
   const iconUrl = resolvedSearchParams.slug
     ? `/icon?slug=${encodeURIComponent(resolvedSearchParams.slug)}`
     : "/icon";
@@ -103,8 +106,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     title,
     description,
     applicationName: siteName,
-    keywords: profile.seoKeywords
-      ? profile.seoKeywords.split(",").map((item) => item.trim())
+    keywords: resolvedProfile.seoKeywords
+      ? resolvedProfile.seoKeywords.split(",").map((item) => item.trim())
       : undefined,
     alternates: {
       canonical: url || undefined,
@@ -112,7 +115,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     robots,
     openGraph: {
       type: "website",
-      locale: profile.locale?.replace("-", "_") || "pt_BR",
+      locale: resolvedProfile.locale?.replace("-", "_") || "pt_BR",
       url: url || undefined,
       title,
       description,
@@ -136,9 +139,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
           }
         : {}),
     },
-    other: profile.themeColor
+    other: resolvedProfile.themeColor
       ? {
-          "theme-color": profile.themeColor,
+          "theme-color": resolvedProfile.themeColor,
         }
       : undefined,
   };
@@ -216,12 +219,15 @@ export default async function MaguiConnectPage(props: Props) {
   }
 
   const shouldNoIndex = isLocalHost(host) || profile.indexable === false;
+  const resolvedProfile = withResolvedProfileAssets(profile);
 
   return (
     <>
-      {!shouldNoIndex && <JsonLd data={buildProfileJsonLd(profile)} />}
+      {!shouldNoIndex && <JsonLd data={buildProfileJsonLd(resolvedProfile)} />}
       <ProfileView
-        profile={profile as Parameters<typeof ProfileView>[0]["profile"]}
+        profile={
+          resolvedProfile as Parameters<typeof ProfileView>[0]["profile"]
+        }
       />
     </>
   );

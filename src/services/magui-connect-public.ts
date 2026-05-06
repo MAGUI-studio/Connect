@@ -230,6 +230,27 @@ export function getRobotsDirectives(
   };
 }
 
+export function withResolvedProfileAssets<
+  T extends {
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
+    faviconUrl?: string | null;
+    logoUrl?: string | null;
+    ogImageUrl?: string | null;
+    twitterImageUrl?: string | null;
+  },
+>(profile: T): T {
+  return {
+    ...profile,
+    avatarUrl: resolvePublicAssetUrl(profile.avatarUrl),
+    bannerUrl: resolvePublicAssetUrl(profile.bannerUrl),
+    faviconUrl: resolvePublicAssetUrl(profile.faviconUrl),
+    logoUrl: resolvePublicAssetUrl(profile.logoUrl),
+    ogImageUrl: resolvePublicAssetUrl(profile.ogImageUrl),
+    twitterImageUrl: resolvePublicAssetUrl(profile.twitterImageUrl),
+  };
+}
+
 export const getPublicProfileBySlugOrDomain = cache(
   async ({ slug, host }: { slug?: string; host?: string | null }) => {
     const normalizedHost = normalizeHost(host);
