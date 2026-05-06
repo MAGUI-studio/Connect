@@ -9,7 +9,17 @@ import {
 } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowRight, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  ExternalLink,
+  Mail,
+  MapPin,
+  Phone,
+  Sparkles,
+  Layout,
+  Link as LinkIcon,
+  Palette,
+} from "lucide-react";
 import { ScrollArea } from "../src/components/ui/scroll-area";
 import { ThemeToggle } from "./common/themeToggle";
 
@@ -210,6 +220,46 @@ export function ProfileView({ profile }: { profile: Profile }) {
       .filter((l) => !l.sectionId && l.isActive)
       .filter(isLinkVisible);
   }, [profile.MaguiConnectLink]);
+
+  const activeSections = useMemo(() => {
+    return (profile.MaguiConnectSection || [])
+      .filter((section) => section.isActive)
+      .filter((section) => {
+        const sectionLinks = (section.MaguiConnectLink || [])
+          .filter((link) => link.isActive)
+          .filter(isLinkVisible);
+        return sectionLinks.length > 0;
+      });
+  }, [profile.MaguiConnectSection]);
+
+  const isNewProfile = useMemo(() => {
+    const hasLinks = topLevelLinks.length > 0 || activeSections.length > 0;
+    const hasBio = !!(
+      profile.bio ||
+      profile.headline ||
+      profile.heroHeadline ||
+      profile.heroDescription
+    );
+    const hasContact = !!(
+      profile.whatsapp ||
+      profile.publicEmail ||
+      profile.publicPhone
+    );
+    const hasCTA = !!(profile.primaryCtaUrl || profile.secondaryCtaUrl);
+    const hasMedia = !!(profile.avatarUrl || profile.bannerUrl);
+
+    return !hasLinks && !hasBio && !hasContact && !hasCTA && !hasMedia;
+  }, [profile, topLevelLinks, activeSections]);
+
+  if (isNewProfile) {
+    return (
+      <EmptyState
+        profile={profile}
+        titleFont={titleFont}
+        accentColor={accentColor}
+      />
+    );
+  }
 
   const whatsappUrl = profile.whatsapp
     ? `https://wa.me/${profile.whatsapp.replace(/\D/g, "")}${profile.whatsappMessage ? `?text=${encodeURIComponent(profile.whatsappMessage)}` : ""}`
@@ -675,4 +725,130 @@ function useCountdownLabel(expiresAtValue: string | Date | null) {
   const seconds = totalSeconds % 60;
 
   return `Encerra em ${hours} horas, ${minutes} minutos e ${seconds} segundos.`;
+}
+
+function EmptyState({
+  profile,
+  titleFont,
+  accentColor,
+}: {
+  profile: Profile;
+  titleFont: string;
+  accentColor: string;
+}) {
+  return (
+    <div className="bg-background text-foreground relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-6 py-12">
+      {/* Background Orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute -top-[10%] -left-[10%] h-[500px] w-[500px] rounded-full opacity-20 blur-[120px]"
+          style={{ backgroundColor: accentColor }}
+        />
+        <div
+          className="absolute -right-[10%] -bottom-[10%] h-[400px] w-[400px] rounded-full opacity-10 blur-[100px]"
+          style={{ backgroundColor: accentColor }}
+        />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-2xl text-center"
+      >
+        <div className="mb-8 flex justify-center">
+          <div className="relative h-20 w-48">
+            <Image
+              src="/logos/LOGO_MAGUI_DM.svg"
+              alt="MAGUI Connect"
+              fill
+              className="object-contain dark:hidden"
+            />
+            <Image
+              src="/logos/LOGO_MAGUI_LM.svg"
+              alt="MAGUI Connect"
+              fill
+              className="hidden object-contain dark:block"
+            />
+          </div>
+        </div>
+
+        <h1
+          className="mb-4 text-4xl font-bold tracking-tight md:text-5xl"
+          style={{ fontFamily: titleFont }}
+        >
+          Bem-vindo, {profile.displayName}!
+        </h1>
+
+        <p className="text-muted-foreground mx-auto mb-12 max-w-lg text-lg leading-relaxed">
+          Sua página MAGUI Connect está pronta para ganhar vida. Enquanto você
+          configura os detalhes no painel, veja como sua presença digital pode
+          brilhar:
+        </p>
+
+        <div className="mb-12 grid gap-4 text-left md:grid-cols-3">
+          <OnboardingStep
+            icon={<Layout size={24} />}
+            title="Sua Identidade"
+            description="Personalize seu avatar, bio e redes sociais."
+          />
+          <OnboardingStep
+            icon={<LinkIcon size={24} />}
+            title="Seus Links"
+            description="Adicione seus canais e organize em seções."
+          />
+          <OnboardingStep
+            icon={<Palette size={24} />}
+            title="Seu Design"
+            description="Escolha cores e temas que combinam com você."
+          />
+        </div>
+
+        <div className="flex flex-col items-center gap-6">
+          <div className="bg-foreground/[0.03] flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
+            <Sparkles size={16} className="text-amber-500" />
+            <span>Aguardando suas configurações no dashboard</span>
+          </div>
+
+          <motion.a
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            href="https://magui.studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground group flex items-center gap-2 text-xs font-medium opacity-60 transition-opacity hover:opacity-100"
+          >
+            Powered by MAGUI.studio
+            <ArrowRight
+              size={12}
+              className="transition-transform group-hover:translate-x-1"
+            />
+          </motion.a>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function OnboardingStep({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="bg-foreground/[0.03] border-foreground/[0.05] hover:bg-foreground/[0.05] flex flex-col gap-3 rounded-3xl border p-6 transition-colors">
+      <div className="text-foreground/80 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 shadow-sm dark:bg-black/20">
+        {icon}
+      </div>
+      <div>
+        <h3 className="mb-1 font-semibold tracking-tight">{title}</h3>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
 }
