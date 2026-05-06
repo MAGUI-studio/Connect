@@ -3,7 +3,13 @@
 import { useMemo, useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowRight, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Envelope,
+  MapPin,
+  Phone,
+} from "@phosphor-icons/react";
 import { ScrollArea } from "../src/components/ui/scroll-area";
 import { ThemeToggle } from "./common/themeToggle";
 
@@ -366,7 +372,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                         style={{ backgroundColor: accentColor }}
                       >
                         {profile.primaryCtaLabel}
-                        <ExternalLink size={16} />
+                        <ArrowUpRight size={16} />
                       </motion.a>
                     )}
 
@@ -400,7 +406,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                         iconPath={getIconPath("EMAIL", profile.publicEmail)}
                         href={`mailto:${profile.publicEmail}`}
                         label="Email"
-                        fallbackIcon={<Mail size={18} />}
+                        fallbackIcon={<Envelope size={18} />}
                       />
                     )}
                     {profile.publicPhone && (
@@ -665,7 +671,7 @@ function LinkCard({
           link.isFeatured ? "text-white/85" : "text-muted-foreground"
         }`}
       >
-        <ArrowRight size={22} strokeWidth={1.9} />
+        <ArrowRight size={22} weight="bold" />
       </div>
     </motion.a>
   );
