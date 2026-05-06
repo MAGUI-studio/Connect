@@ -233,6 +233,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                             sizes="(max-width: 768px) 96px, 112px"
                             className="object-cover"
                             priority
+                            unoptimized
                           />
                         </motion.div>
                       ) : (
@@ -391,6 +392,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 60vw"
                     className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.14)_68%,transparent_100%)]" />
                   <div className="absolute top-5 right-5 z-20">
