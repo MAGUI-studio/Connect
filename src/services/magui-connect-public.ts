@@ -100,6 +100,20 @@ export function normalizeHost(rawHost?: string | null) {
     .replace(/^www\./, "");
 }
 
+export function getHostLookupCandidates(rawHost?: string | null) {
+  const normalizedHost = normalizeHost(rawHost);
+
+  if (!normalizedHost) return [];
+
+  const candidates = new Set<string>([normalizedHost]);
+
+  if (normalizedHost.startsWith("bio.")) {
+    candidates.add(normalizedHost.replace(/^bio\./, ""));
+  }
+
+  return [...candidates];
+}
+
 export function isLocalHost(host?: string | null) {
   return Boolean(
     host &&
@@ -219,6 +233,7 @@ export function getRobotsDirectives(
 export const getPublicProfileBySlugOrDomain = cache(
   async ({ slug, host }: { slug?: string; host?: string | null }) => {
     const normalizedHost = normalizeHost(host);
+    const hostCandidates = getHostLookupCandidates(host);
 
     if (isLocalHost(normalizedHost) && slug) {
       return prisma.maguiConnectProfile.findUnique({
@@ -227,9 +242,9 @@ export const getPublicProfileBySlugOrDomain = cache(
       });
     }
 
-    if (normalizedHost && !isLocalHost(normalizedHost)) {
-      return prisma.maguiConnectProfile.findUnique({
-        where: { domain: normalizedHost },
+    if (hostCandidates.length > 0 && !isLocalHost(normalizedHost)) {
+      return prisma.maguiConnectProfile.findFirst({
+        where: { domain: { in: hostCandidates } },
         select: profileSelect,
       });
     }
