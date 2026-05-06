@@ -217,7 +217,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
   return (
     <div
-      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden xl:h-screen xl:overflow-hidden"
+      className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden 2xl:h-screen 2xl:overflow-hidden"
       style={{ fontFamily: fontStyle }}
     >
       <div className="pointer-events-none absolute inset-0">
@@ -238,13 +238,13 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
       <main className="relative z-10 w-full px-4 py-4 md:px-8 md:py-8 lg:h-full lg:px-12 lg:py-6">
         <motion.div
-          className="grid grid-cols-1 gap-8 xl:h-full xl:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.35fr)] xl:gap-10"
+          className="grid grid-cols-1 gap-8 2xl:h-full 2xl:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.35fr)] 2xl:gap-10"
           variants={container}
           initial="hidden"
           animate="show"
         >
           <motion.div variants={item}>
-            <div className="p-2 md:p-4 xl:h-full xl:overflow-hidden">
+            <div className="p-2 md:p-4 2xl:h-full 2xl:overflow-hidden">
               <div className="flex items-start justify-between gap-4">
                 <div className="w-full space-y-6">
                   <div className="space-y-6">
@@ -413,7 +413,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
           </motion.div>
 
           <motion.div className="relative lg:h-full" variants={item}>
-            <ScrollArea className="h-full w-full pb-5 xl:h-screen xl:pr-5">
+            <ScrollArea className="h-full w-full pb-5 2xl:h-screen 2xl:pr-5">
               <div className="space-y-6 pb-6 lg:pr-4">
                 <div className="relative h-56 overflow-hidden rounded-[2rem] md:h-[24rem]">
                   <Image
