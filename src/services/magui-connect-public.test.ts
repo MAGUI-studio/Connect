@@ -63,6 +63,28 @@ describe("magui-connect-public utilities", () => {
         "example.com"
       );
     });
+
+    it("should handle IDN domains", () => {
+      expect(normalizeHost("xn--mnchen-3ya.de")).toBe("xn--mnchen-3ya.de");
+    });
+
+    it("should handle multiple protocols (invalid but should be handled)", () => {
+      expect(normalizeHost("http://https://example.com")).toBe(
+        "https://example.com"
+      );
+    });
+
+    it("should handle domains with many subdomains", () => {
+      expect(normalizeHost("a.b.c.d.example.com")).toBe("a.b.c.d.example.com");
+    });
+
+    it("should handle ipv4 addresses", () => {
+      expect(normalizeHost("192.168.1.1")).toBe("192.168.1.1");
+    });
+
+    it("should handle mixed case and whitespace in protocols", () => {
+      expect(normalizeHost(" hTtP://ExAmPlE.cOm ")).toBe("example.com");
+    });
   });
 
   describe("getHostLookupCandidates", () => {
@@ -167,6 +189,39 @@ describe("magui-connect-public utilities", () => {
         "https://utfs.io/f/some-asset-id"
       );
     });
+
+    it("should handle URLs with query parameters", () => {
+      expect(resolvePublicAssetUrl("https://example.com/img.png?v=1")).toBe(
+        "https://example.com/img.png?v=1"
+      );
+    });
+
+    it("should handle URLs with fragments", () => {
+      expect(resolvePublicAssetUrl("https://example.com/img.png#top")).toBe(
+        "https://example.com/img.png#top"
+      );
+    });
+
+    it("should handle weird characters in asset ID", () => {
+      expect(resolvePublicAssetUrl("asset space!@#$%^&*()")).toBe(
+        "https://utfs.io/f/asset space!@#$%^&*()"
+      );
+    });
+
+    it("should handle protocol-relative URLs", () => {
+      // Starts with / so it returns as is
+      expect(resolvePublicAssetUrl("//example.com/img.png")).toBe(
+        "//example.com/img.png"
+      );
+    });
+
+    it("should handle data URLs", () => {
+      const dataUrl =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+      expect(resolvePublicAssetUrl(dataUrl)).toBe(
+        `https://utfs.io/f/${dataUrl}`
+      );
+    });
   });
 
   describe("getProfileSeoTitle", () => {
@@ -174,6 +229,23 @@ describe("magui-connect-public utilities", () => {
       expect(getProfileSeoTitle({ seoTitle: "SEO", displayName: "Name" })).toBe(
         "SEO"
       );
+    });
+
+    it("should handle empty seoTitle", () => {
+      expect(getProfileSeoTitle({ seoTitle: "", displayName: "Name" })).toBe(
+        "Name"
+      );
+    });
+
+    it("should handle special characters in title", () => {
+      expect(
+        getProfileSeoTitle({ seoTitle: "Title & More | 100% Valid" })
+      ).toBe("Title & More | 100% Valid");
+    });
+
+    it("should handle very long titles", () => {
+      const longTitle = "a".repeat(200);
+      expect(getProfileSeoTitle({ seoTitle: longTitle })).toBe(longTitle);
     });
 
     it("should fallback to displayName", () => {
@@ -206,6 +278,18 @@ describe("magui-connect-public utilities", () => {
       expect(getProfileSeoDescription({ bio: "Bio" })).toBe("Bio");
     });
 
+    it("should handle empty strings for seoDescription", () => {
+      expect(
+        getProfileSeoDescription({ seoDescription: "", headline: "Headline" })
+      ).toBe("Headline");
+    });
+
+    it("should handle special characters in description", () => {
+      expect(getProfileSeoDescription({ bio: "Bio with emoji 🚀" })).toBe(
+        "Bio with emoji 🚀"
+      );
+    });
+
     it("should have default fallback", () => {
       expect(getProfileSeoDescription()).toBe("Landing page profissional.");
     });
@@ -216,6 +300,12 @@ describe("magui-connect-public utilities", () => {
       expect(
         getProfileSiteName({ siteName: "Site", displayName: "Name" })
       ).toBe("Site");
+    });
+
+    it("should handle empty siteName", () => {
+      expect(getProfileSiteName({ siteName: "", displayName: "Name" })).toBe(
+        "Name"
+      );
     });
 
     it("should fallback to displayName", () => {
@@ -285,6 +375,24 @@ describe("magui-connect-public utilities", () => {
       expect(res.follow).toBe(false);
       expect(res.googleBot.follow).toBe(false);
     });
+
+    it("should handle explicitly true values", () => {
+      const res = getRobotsDirectives({
+        indexable: true,
+        seoNoFollow: false,
+      });
+      expect(res.index).toBe(true);
+      expect(res.follow).toBe(true);
+    });
+
+    it("should handle mixed null values", () => {
+      const res = getRobotsDirectives({
+        indexable: null,
+        seoNoFollow: null,
+      });
+      expect(res.index).toBe(true);
+      expect(res.follow).toBe(true);
+    });
   });
 
   describe("withResolvedProfileAssets", () => {
@@ -306,6 +414,19 @@ describe("magui-connect-public utilities", () => {
       expect(resolved.ogImageUrl).toBe("https://utfs.io/f/o");
       expect(resolved.twitterImageUrl).toBe("https://utfs.io/f/t");
       expect(resolved.other).toBe("keep");
+    });
+
+    it("should handle partial objects", () => {
+      const profile = { avatarUrl: "a" };
+      const resolved = withResolvedProfileAssets(profile);
+      expect(resolved.avatarUrl).toBe("https://utfs.io/f/a");
+      expect(resolved.bannerUrl).toBeNull();
+    });
+
+    it("should handle already resolved URLs", () => {
+      const profile = { avatarUrl: "https://example.com/avatar.png" };
+      const resolved = withResolvedProfileAssets(profile);
+      expect(resolved.avatarUrl).toBe("https://example.com/avatar.png");
     });
   });
 });

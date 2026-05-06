@@ -290,4 +290,170 @@ describe("ProfileView", () => {
     // Now it should show empty state because everything else is null
     expect(screen.getByText("Em Breve")).toBeInTheDocument();
   });
+
+  it("renders specific platform icons correctly", () => {
+    const profileWithManyIcons = {
+      ...mockProfile,
+      MaguiConnectLink: [
+        {
+          ...mockProfile.MaguiConnectLink[0],
+          id: "l1",
+          label: "Github Link",
+          kind: "GITHUB",
+          url: "https://github.com/test",
+        },
+        {
+          ...mockProfile.MaguiConnectLink[0],
+          id: "l2",
+          label: "iFood Link",
+          kind: "IFOOD",
+          url: "https://ifood.com.br/test",
+        },
+        {
+          ...mockProfile.MaguiConnectLink[0],
+          id: "l3",
+          label: "Gmail Link",
+          kind: "EMAIL",
+          url: "mailto:test@gmail.com",
+        },
+      ],
+    };
+
+    render(<ProfileView profile={profileWithManyIcons} />);
+
+    expect(screen.getByAltText("Github Link")).toHaveAttribute(
+      "src",
+      "/icons/Github.svg"
+    );
+    expect(screen.getByAltText("iFood Link")).toHaveAttribute(
+      "src",
+      "/icons/iFood.svg"
+    );
+    expect(screen.getByAltText("Gmail Link")).toHaveAttribute(
+      "src",
+      "/icons/Gmail.svg"
+    );
+  });
+
+  it("applies theme accent color correctly", () => {
+    render(<ProfileView profile={mockProfile} />);
+
+    const primaryCTA = screen
+      .getByText(mockProfile.primaryCtaLabel)
+      .closest("a");
+    expect(primaryCTA).toHaveStyle({
+      backgroundColor: mockProfile.themeAccent,
+    });
+
+    const featuredLink = screen.getByText("Instagram").closest("a");
+    expect(featuredLink).toHaveStyle({
+      backgroundColor: mockProfile.themeAccent,
+    });
+  });
+
+  it("renders location and company only if present", () => {
+    const minimalProfile = {
+      ...mockProfile,
+      location: null,
+      companyName: null,
+    };
+
+    const { rerender } = render(<ProfileView profile={minimalProfile} />);
+    expect(screen.queryByTestId("map-pin")).not.toBeInTheDocument();
+    expect(screen.queryByText(mockProfile.companyName)).not.toBeInTheDocument();
+
+    rerender(<ProfileView profile={{ ...mockProfile, location: "Mars" }} />);
+    expect(screen.getByTestId("map-pin")).toBeInTheDocument();
+    expect(screen.getByText("Mars")).toBeInTheDocument();
+  });
+
+  it("handles openInNewTab prop correctly", () => {
+    const profileWithMixedLinks = {
+      ...mockProfile,
+      MaguiConnectLink: [
+        { ...mockProfile.MaguiConnectLink[0], openInNewTab: true },
+        { ...mockProfile.MaguiConnectLink[1], openInNewTab: false },
+      ],
+    };
+
+    render(<ProfileView profile={profileWithMixedLinks} />);
+
+    const link1 = screen.getByText("My Website").closest("a");
+    expect(link1).toHaveAttribute("target", "_blank");
+
+    const link2 = screen.getByText("Instagram").closest("a");
+    expect(link2).toHaveAttribute("target", "_self");
+  });
+
+  it("renders phone quick action correctly", () => {
+    const profileWithPhone = {
+      ...mockProfile,
+      publicEmail: null,
+      whatsapp: null,
+    };
+
+    render(<ProfileView profile={profileWithPhone} />);
+    expect(screen.getByTitle("Phone")).toBeInTheDocument();
+    expect(screen.getByAltText("Phone")).toHaveAttribute(
+      "src",
+      "/icons/Link.svg"
+    );
+  });
+
+  it("shows links that have started and not yet expired", () => {
+    const now = new Date();
+    const pastDate = new Date(now.getTime() - 1000 * 60 * 60);
+    const futureDate = new Date(now.getTime() + 1000 * 60 * 60);
+
+    const profileWithTimedLinks = {
+      ...mockProfile,
+      MaguiConnectLink: [
+        {
+          ...mockProfile.MaguiConnectLink[0],
+          id: "valid-timed",
+          label: "Valid Timed Link",
+          startsAt: pastDate.toISOString(),
+          expiresAt: futureDate.toISOString(),
+        },
+      ],
+    };
+
+    render(<ProfileView profile={profileWithTimedLinks} />);
+    expect(screen.getByText("Valid Timed Link")).toBeInTheDocument();
+  });
+
+  it("renders featured link with white text", () => {
+    render(<ProfileView profile={mockProfile} />);
+    const featuredLink = screen.getByText("Instagram").closest("a");
+    expect(featuredLink).toHaveClass("text-white");
+  });
+
+  it("handles missing hero section fields gracefully", () => {
+    const partialHeroProfile = {
+      ...mockProfile,
+      heroKicker: null,
+      heroDescription: null,
+    };
+    render(<ProfileView profile={partialHeroProfile} />);
+    expect(screen.queryByText("Hello")).not.toBeInTheDocument();
+    expect(screen.getByText(mockProfile.heroHeadline)).toBeInTheDocument();
+  });
+
+  it("renders section description if present", () => {
+    render(<ProfileView profile={mockProfile} />);
+    expect(screen.getByText("Find me online")).toBeInTheDocument();
+  });
+
+  it("renders placeholder banner if bannerUrl is missing", () => {
+    const noBannerProfile = { ...mockProfile, bannerUrl: null };
+    render(<ProfileView profile={noBannerProfile} />);
+    const banner = screen.getByAltText("Banner");
+    expect(banner).toHaveAttribute("src", "/images/placeholder.svg");
+  });
+
+  it("renders avatar placeholder if avatarUrl is missing", () => {
+    const noAvatarProfile = { ...mockProfile, avatarUrl: null };
+    render(<ProfileView profile={noAvatarProfile} />);
+    expect(screen.getByText("J")).toBeInTheDocument(); // Initial of John Doe
+  });
 });
