@@ -655,7 +655,7 @@ function LinkCard({
         </div>
 
         <p
-          className={`mt-1 truncate text-sm ${
+          className={`mt-1 text-sm ${
             link.isFeatured ? "text-foreground/70" : "text-muted-foreground"
           }`}
           style={
