@@ -1,3 +1,6 @@
+import { headers } from "next/headers";
+import { prisma } from "@/utils/prisma";
+
 export function normalizeHost(rawHost?: string | null) {
   if (rawHost === null || rawHost === undefined) return null;
   if (rawHost.trim() === "") return null;
@@ -185,4 +188,84 @@ export function withResolvedProfileAssets<
     ogImageUrl: resolvePublicAssetUrl(profile.ogImageUrl),
     twitterImageUrl: resolvePublicAssetUrl(profile.twitterImageUrl),
   };
+}
+
+export async function getCurrentRequestHost() {
+  const headersList = await headers();
+  return headersList.get("host") || headersList.get("x-forwarded-host");
+}
+
+export async function getCurrentRequestSlugFromReferer() {
+  const headersList = await headers();
+  const referer = headersList.get("referer");
+  if (!referer) return null;
+
+  try {
+    const url = new URL(referer);
+    return url.searchParams.get("slug");
+  } catch {
+    return null;
+  }
+}
+
+export async function getPublicProfileBySlugOrDomain({
+  slug,
+  host,
+}: {
+  slug?: string | null;
+  host?: string | null;
+}) {
+  if (slug) {
+    return prisma.maguiConnectProfile.findUnique({
+      where: { slug },
+      include: {
+        MaguiConnectLink: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+        MaguiConnectSection: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+          include: {
+            MaguiConnectLink: {
+              where: { isActive: true },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  if (host) {
+    const candidates = getHostLookupCandidates(host);
+    if (candidates.length === 0) return null;
+
+    // Try each candidate as a domain
+    for (const candidate of candidates) {
+      const profile = await prisma.maguiConnectProfile.findUnique({
+        where: { domain: candidate },
+        include: {
+          MaguiConnectLink: {
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+          },
+          MaguiConnectSection: {
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+            include: {
+              MaguiConnectLink: {
+                where: { isActive: true },
+                orderBy: { sortOrder: "asc" },
+              },
+            },
+          },
+        },
+      });
+
+      if (profile) return profile;
+    }
+  }
+
+  return null;
 }

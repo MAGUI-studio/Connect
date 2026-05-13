@@ -332,6 +332,16 @@ describe("ProfileView Component", () => {
         expected: "/icons/iFood.svg",
       },
       {
+        kind: "MAGUISTUDIO",
+        url: "https://magui.studio",
+        expected: "/icons/MAGUIstudio.svg",
+      },
+      {
+        kind: "USUARIO",
+        url: "https://example.com/user",
+        expected: "/icons/Usuario.svg",
+      },
+      {
         kind: "EMAIL",
         url: "mailto:test@gmail.com",
         expected: "/icons/Gmail.svg",
@@ -454,6 +464,23 @@ describe("ProfileView Component", () => {
       render(<ProfileView profile={profile} />);
       const img = screen.getByAltText("Inferred Insta");
       expect(img).toHaveAttribute("src", "/icons/Instagram.svg");
+    });
+
+    test("handles magui.studio links without kind (inference)", () => {
+      const profile = {
+        ...mockProfile,
+        MaguiConnectLink: [
+          {
+            ...mockProfile.MaguiConnectLink[0],
+            kind: null,
+            url: "https://magui.studio/test",
+            label: "Inferred Magui",
+          },
+        ],
+      };
+      render(<ProfileView profile={profile} />);
+      const img = screen.getByAltText("Inferred Magui");
+      expect(img).toHaveAttribute("src", "/icons/MAGUIstudio.svg");
     });
 
     test("renders featured link with white text style", () => {

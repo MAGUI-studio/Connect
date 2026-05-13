@@ -118,6 +118,8 @@ const getIconPath = (kind: string, url: string = "") => {
     EDUZZ: "Eduzz",
     GITHUB: "Github",
     IFOOD: "iFood",
+    MAGUISTUDIO: "MAGUIstudio",
+    USUARIO: "Usuario",
   };
 
   const iconName = iconMap[normalizedKind];
@@ -155,6 +157,7 @@ const inferLinkKind = (url: string) => {
   if (lowerUrl.includes("artstation.com")) return "ARTSTATION";
   if (lowerUrl.includes("github.com")) return "GITHUB";
   if (lowerUrl.includes("ifood.com.br")) return "IFOOD";
+  if (lowerUrl.includes("magui.studio")) return "MAGUISTUDIO";
   if (lowerUrl.includes("amazon.com") || lowerUrl.includes("amzn.to"))
     return "AMAZON";
   if (lowerUrl.includes("aliexpress.com")) return "ALIEXPRESS";
