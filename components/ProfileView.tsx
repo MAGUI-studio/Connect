@@ -118,8 +118,8 @@ const getIconPath = (kind: string, url: string = "") => {
     EDUZZ: "Eduzz",
     GITHUB: "Github",
     IFOOD: "iFood",
-    MAGUISTUDIO: "MAGUIstudio",
-    USUARIO: "Usuario",
+    MAGUI_STUDIO: "MAGUIstudio",
+    USER: "Usuario",
   };
 
   const iconName = iconMap[normalizedKind];
