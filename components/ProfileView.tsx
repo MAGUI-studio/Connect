@@ -624,7 +624,7 @@ function LinkCard({
       href={`/api/click?linkId=${link.id}&url=${encodeURIComponent(link.url)}`}
       target={link.openInNewTab ? "_blank" : "_self"}
       rel="noopener noreferrer"
-      className={`group relative flex items-center gap-4 rounded-[1.75rem] px-4 py-4 transition-all md:px-5 md:py-5 ${
+      className={`group relative flex items-center gap-4 rounded-none px-4 py-4 transition-all md:px-5 md:py-5 ${
         link.isFeatured
           ? "text-white"
           : "hover:bg-foreground/[0.04] bg-transparent"
