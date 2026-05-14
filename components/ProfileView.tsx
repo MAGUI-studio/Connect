@@ -258,6 +258,9 @@ export function ProfileView({ profile }: { profile: Profile }) {
     ? `https://wa.me/${profile.whatsapp.replace(/\D/g, "")}${profile.whatsappMessage ? `?text=${encodeURIComponent(profile.whatsappMessage)}` : ""}`
     : null;
 
+  const hasBannerText =
+    profile.heroKicker || profile.heroHeadline || profile.heroDescription;
+
   return (
     <div
       className="bg-background text-foreground relative min-h-screen w-full overflow-x-hidden 2xl:h-screen 2xl:overflow-hidden"
@@ -467,13 +470,13 @@ export function ProfileView({ profile }: { profile: Profile }) {
                     className="object-cover"
                     unoptimized
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.14)_68%,transparent_100%)]" />
+                  {hasBannerText && (
+                    <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.52)_36%,rgba(0,0,0,0.14)_68%,transparent_100%)]" />
+                  )}
                   <div className="absolute top-5 right-5 z-20">
                     <ThemeToggle />
                   </div>
-                  {(profile.heroKicker ||
-                    profile.heroHeadline ||
-                    profile.heroDescription) && (
+                  {hasBannerText && (
                     <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
                       <div className="space-y-2 md:space-y-3">
                         {profile.heroKicker && (
