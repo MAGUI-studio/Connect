@@ -374,7 +374,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                         href={profile.primaryCtaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-white"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-none px-5 py-6 text-sm font-medium text-white"
                         style={{ backgroundColor: accentColor }}
                       >
                         {profile.primaryCtaLabel}
@@ -391,7 +391,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
                         href={profile.secondaryCtaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-foreground/[0.05] inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium"
+                        className="bg-foreground/[0.05] inline-flex w-full items-center justify-center gap-2 rounded-none px-5 py-3.5 text-sm font-medium"
                       >
                         {profile.secondaryCtaLabel}
                         <ArrowRight size={16} />
@@ -581,7 +581,7 @@ function QuickAction({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="bg-foreground/[0.03] hover:bg-foreground/[0.05] flex items-center gap-3 rounded-[1.25rem] px-4 py-3 text-left transition-colors"
+      className="bg-foreground/[0.03] hover:bg-foreground/[0.05] flex items-center gap-3 rounded-none px-4 py-3 text-left transition-colors"
       title={label}
     >
       <div className="flex h-11 w-11 shrink-0 items-center justify-center">
